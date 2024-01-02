@@ -1,0 +1,176 @@
+@startuml
+autonumber
+
+actor Client as "Client"
+entity Server as "MTCG Server"
+
+group #green User Registration
+    Client -> Server: POST /users (Register User)
+    alt User successfully created
+        Server --> Client: 201 (User successfully created)
+    else Username already exists
+        Server --> Client: 409 (User with same username already registered)
+    end
+end
+
+group #green Retrieve User Data
+    Client -> Server: GET /users/{username} (Request User Data)
+    alt Data successfully retrieved
+        Server --> Client: 200 (User Data)
+    else Unauthorized
+        Server --> Client: 401 (UnauthorizedError)
+    else User not found
+        Server --> Client: 404 (User not found)
+    end
+end
+
+group #green Update User Data
+    Client -> Server: PUT /users/{username} (Update User Data)
+    alt User successfully updated
+        Server --> Client: 200 (User Data)
+    else Unauthorized
+        Server --> Client: 401 (UnauthorizedError)
+    else User not found
+        Server --> Client: 404 (User not found)
+    end
+end
+
+group #green User Login
+    Client -> Server: POST /sessions (Login User)
+    alt Login successful
+        Server --> Client: 200 (User login successful)
+    else Invalid credentials
+        Server --> Client: 401 (Invalid username/password)
+    end
+end
+
+
+group Create Card Packages
+    Client -> Server: POST /packages (Create Package)
+    alt Package created
+        Server --> Client: 201 (Package and cards created)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    else Forbidden (Not admin)
+        Server --> Client: 403 (User not admin)
+    else Card exists
+        Server --> Client: 409 (Card in package exists)
+    end
+end
+
+group Acquire a card package
+    Client -> Server: POST /transactions/packages (Acquire Package)
+    alt A package has been successfully bought
+        Server --> Client: 200 (A package has been successfully bought)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    else No Money
+        Server --> Client: 403 (Not enough money for buying a card package)
+    else Unavailable
+        Server --> Client: 409 (No card package available for buying)
+    end
+end
+
+group Retrieve User Cards
+    Client -> Server: GET /cards (Request User Cards)
+    alt User has cards
+        Server --> Client: 200 (User Cards)
+    else No cards
+        Server --> Client: 204 (No Cards)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    end
+end
+
+group Manage Deck
+    Client -> Server: GET /deck (Request Deck)
+    alt Deck has cards
+        Server --> Client: 200 (Deck Cards)
+    else No cards in deck
+        Server --> Client: 204 (No Cards in Deck)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    end
+
+    Client -> Server: PUT /deck (Configure Deck)
+    alt Deck successfully configured
+        Server --> Client: 200 (Deck Configured)
+    else Invalid deck
+        Server --> Client: 400 (Invalid Deck)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    else Forbidden card usage
+        Server --> Client: 403 (Forbidden Card Usage)
+    end
+end
+
+group User Stats and Scoreboard
+    Client -> Server: GET /stats (Request Stats)
+    alt Stats retrieved
+        Server --> Client: 200 (User Stats)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    end
+
+    Client -> Server: GET /scoreboard (Request Scoreboard)
+    alt Scoreboard retrieved
+        Server --> Client: 200 (Scoreboard)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    end
+end
+
+group Battle Engagement
+    Client -> Server: POST /battles (Start Battle)
+    alt Battle carried out
+        Server --> Client: 200 (Battle Log)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    end
+end
+
+group Trading Deals Management
+    Client -> Server: GET /tradings (Retrieve Trading Deals)
+    alt Deals available
+        Server --> Client: 200 (Trading Deals)
+    else No deals available
+        Server --> Client: 204 (No Trading Deals)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    end
+
+    Client -> Server: POST /tradings (Create Trading Deal)
+    alt Deal created
+        Server --> Client: 201 (Trading Deal Created)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    else Forbidden card usage
+        Server --> Client: 403 (Forbidden Card Usage)
+    else Deal ID exists
+        Server --> Client: 409 (Deal ID Exists)
+    end
+
+    Client -> Server: DELETE /tradings/{tradingdealid} (Delete Trading Deal)
+    alt Deal deleted
+        Server --> Client: 200 (Trading Deal Deleted)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    else Forbidden card usage
+        Server --> Client: 403 (Forbidden Card Usage)
+    else Deal ID not found
+        Server --> Client: 404 (Deal ID Not Found)
+    end
+
+    Client -> Server: POST /tradings/{tradingdealid} (Execute Trade)
+    alt Trade executed
+        Server --> Client: 200 (Trade Executed)
+    else Unauthorized
+        Server --> Client: 401 (Unauthorized)
+    else Forbidden card usage
+        Server --> Client: 403 (Forbidden Card Usage)
+    else Deal ID not found
+        Server --> Client: 404 (Deal ID Not Found)
+    end
+end
+
+@enduml
