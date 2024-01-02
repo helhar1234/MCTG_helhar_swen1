@@ -1,10 +1,13 @@
 package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.entity.UserData;
 
 import java.util.Optional;
 
 public interface UserRepository {
+    boolean authenticateToken(String token);
+
     boolean saveUser(User user);
 
     boolean isUsernameExists(String username);
@@ -12,4 +15,8 @@ public interface UserRepository {
     Optional<User> findByUsername(String username);
 
     Optional<String> generateToken(User user);
+
+    UserData updateUserData(String id, UserData userData);
+
+    Optional<User> findByToken(String token);
 }

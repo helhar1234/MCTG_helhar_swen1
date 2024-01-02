@@ -2,11 +2,11 @@ package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.entity.UserData;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class UserRepository_db implements UserRepository{
@@ -16,25 +16,53 @@ public class UserRepository_db implements UserRepository{
     private final String SEARCH_USERNAME_SQL = "SELECT COUNT(*) AS count FROM users WHERE username = ?";
     private final String FIND_USER_SQL = "SELECT * FROM users WHERE username = ?";
     private final String SAVE_TOKEN_SQL = "INSERT INTO access_token(user_fk, token_name) VALUES (?, ?) RETURNING token_name";
+    private final String DELETE_EXPIRED_TOKEN_SQL = "DELETE FROM access_token WHERE token_timestamp < (CURRENT_TIMESTAMP - INTERVAL '20 MINUTE')";
+    private final String AUTH_TOKEN_SQL = "SELECT * FROM access_token WHERE token_name = ? AND token_timestamp >= (CURRENT_TIMESTAMP - INTERVAL '20 MINUTE')";
+    private final String SAVE_USERDATA_SQL = "INSERT INTO userdata (user_fk, name) VALUES (?, ?)";
+
+    private final String FIND_USER_BY_TOKEN_SQL = "SELECT u.* FROM users u INNER JOIN access_token at ON u.user_id = at.user_fk WHERE at.token_name = ?";
     @Override
     public boolean saveUser(User user) {
-        try (
-            Connection connection = database.getConnection();
-            PreparedStatement statement = connection.prepareStatement(CREATE_USER_SQL)) {
+        boolean success = false;
 
-            statement.setString(1, user.getId());
-            statement.setString(2, user.getUsername());
-            statement.setString(3, user.getPassword());
-            statement.setBoolean(4, user.isAdmin());
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            int affectedRows = statement.executeUpdate();
+            // Insert into users
+            try (PreparedStatement createUserStatement = connection.prepareStatement(CREATE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+                createUserStatement.setString(1, user.getId());
+                createUserStatement.setString(2, user.getUsername());
+                createUserStatement.setString(3, user.getPassword());
+                createUserStatement.setBoolean(4, user.isAdmin());
+                int userAffectedRows = createUserStatement.executeUpdate();
 
-            return affectedRows == 1;
+                // Retrieve the generated key (user id)
+                if (userAffectedRows == 1) {
+                    try (ResultSet generatedKeys = createUserStatement.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            // Insert into userdata
+                            try (PreparedStatement saveUserDataStatement = connection.prepareStatement(SAVE_USERDATA_SQL)) {
+                                saveUserDataStatement.setString(1, user.getId());
+                                saveUserDataStatement.setString(2, user.getUsername());
+                                if (saveUserDataStatement.executeUpdate() == 1) {
+                                    connection.commit(); // Commit the transaction
+                                    success = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during user save: " + e.getMessage());
+            }
+            connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
-            System.out.println(e);
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
         }
+        return success;
     }
+
 
     @Override
     public boolean isUsernameExists(String username) {
@@ -99,6 +127,86 @@ public class UserRepository_db implements UserRepository{
         return Optional.empty();
     }
 
+    @Override
+    public UserData updateUserData(String id, UserData userData) {
+        StringBuilder sql = new StringBuilder("UPDATE userdata SET ");
+        List<Object> parameters = new ArrayList<>();
+        if (userData.getName() != null) {
+            sql.append("name=?, ");
+            parameters.add(userData.getName());
+        }
+        if (userData.getBio() != null) {
+            sql.append("bio=?, ");
+            parameters.add(userData.getBio());
+        }
+        if (userData.getImage() != null) {
+            sql.append("image=?, ");
+            parameters.add(userData.getImage());
+        }
+
+        // Remove the last comma and space if any parameters were added
+        if (!parameters.isEmpty()) {
+            sql.setLength(sql.length() - 2);
+        } else {
+            // No fields to update
+            return userData;
+        }
+
+        sql.append(" WHERE user_fk=? RETURNING *");
+        parameters.add(id);
+
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < parameters.size(); i++) {
+                statement.setObject(i + 1, parameters.get(i));
+            }
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Assuming you have a method to convert ResultSet to a UserData object
+                    return convertResultSetToUserData(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error updating user data: " + e.getMessage());
+            // Handle exception, possibly rethrow as a unchecked exception or a custom exception
+        }
+        return null; // Or handle this case as you see fit
+    }
+
+    @Override
+    public Optional<User> findByToken(String token) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_USER_BY_TOKEN_SQL)) {
+
+            statement.setString(1, token);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Assuming convertResultSetToUser is implemented correctly to map the ResultSet to a User object
+                    User user = convertResultSetToUser(resultSet);
+                    return Optional.of(user);
+                }
+            } catch (SQLException e) {
+                System.out.println("Error executing findByToken: " + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.out.println("Database connection error: " + e.getMessage());
+        }
+        return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
+    }
+
+    private UserData convertResultSetToUserData(ResultSet resultSet) throws SQLException {
+        // Implement this method to convert a ResultSet to a UserData object.
+        // Extract values from the resultSet and populate a new UserData object.
+        UserData userData = new UserData();
+        userData.setName(resultSet.getString("name"));
+        userData.setBio(resultSet.getString("bio"));
+        userData.setImage(resultSet.getString("image"));
+        return userData;
+    }
+
+
 
     private User convertResultSetToUser(ResultSet resultSet) throws SQLException {
         User user = new User();
@@ -109,5 +217,29 @@ public class UserRepository_db implements UserRepository{
         user.setEloRating(resultSet.getInt("eloRating"));
         user.setAdmin(resultSet.getBoolean("isAdmin"));
         return user;
+    }
+
+    public boolean authenticateToken(String token) {
+        try (Connection connection = database.getConnection();
+             // Delete expired tokens
+             PreparedStatement deleteStmt = connection.prepareStatement(DELETE_EXPIRED_TOKEN_SQL);
+             // Authenticate the current token
+             PreparedStatement authStmt = connection.prepareStatement(AUTH_TOKEN_SQL)) {
+
+            // Execute delete statement
+            deleteStmt.executeUpdate();
+
+            // Set the token in the authenticate statement
+            authStmt.setString(1, token);
+
+            // Execute authenticate statement
+            try (ResultSet resultSet = authStmt.executeQuery()) {
+                // Return true if the token is found
+                return resultSet.next();
+            }
+        } catch (SQLException e) {
+            System.out.println("Error during token authentication: " + e.getMessage());
+            return false;
+        }
     }
 }

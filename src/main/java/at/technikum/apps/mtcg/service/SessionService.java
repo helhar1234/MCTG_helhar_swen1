@@ -28,4 +28,26 @@ public class SessionService {
         // Return empty if user is not found or password does not match
         return Optional.empty();
     }
+
+    public boolean authenticateToken(String token) {
+        return userRepository.authenticateToken(token);
+    }
+
+    public boolean isAdmin(String username) {
+        return userRepository.findByUsername(username).get().isAdmin();
+    }
+
+    public boolean matchRoute(String username, String token) {
+        Optional<User> userByUsername = userRepository.findByUsername(username);
+        Optional<User> userByToken = userRepository.findByToken(token);
+
+        if (!userByUsername.isPresent() || !userByToken.isPresent()) {
+            // One of the Optionals is empty, so no match
+            return false;
+        }
+
+        // Both Optionals have a value; compare the user IDs
+        return userByUsername.get().getId().equals(userByToken.get().getId());
+    }
+
 }

@@ -1,5 +1,7 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.server.http.HttpContentType;
@@ -44,16 +46,65 @@ public class UserController extends Controller {
         switch (request.getMethod()) {
             case "GET":
                 return getUser(username);
+            case "PUT":
+                return updateUser(username, request);
         }
 
         return status(HttpStatus.BAD_REQUEST);
     }
-
     private final UserService userService;
+    private final SessionService sessionService;
 
     public UserController() {
         this.userService = new UserService();
+        this.sessionService = new SessionService();
     }
+
+    private Response updateUser(String username, Request request) {
+        try {
+            // Map request to UserData class
+            ObjectMapper objectMapper = new ObjectMapper();
+            UserData userData = objectMapper.readValue(request.getBody(), UserData.class);
+
+            // Get token and token's username from Authorization header
+            String authHeader = request.getAuthenticationHeader();
+            if (authHeader == null) {
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized");
+            }
+            String[] authParts = authHeader.split("\\s+");
+            String token = authParts[1];
+
+            // Authenticate the token
+            boolean isAuthenticated = sessionService.authenticateToken(token);
+            boolean isMatchingRoute = sessionService.matchRoute(username, token);
+            boolean isAdmin = sessionService.isAdmin(username);
+
+            // Check if the authenticated user is admin or the same as the one being updated
+            if ((isAuthenticated && isMatchingRoute) || (isAuthenticated && isAdmin)) {
+                // Update user data
+                UserData updatedUserData = userService.updateUserData(username, userData); // Ensure this method is implemented
+
+                try {
+                    String jsonUserData = objectMapper.writeValueAsString(updatedUserData);
+                    return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, jsonUserData);
+                } catch (Exception e) {
+                    // Handle JSON serialization errors
+                    System.out.println("Error serializing updated user data: " + e.getMessage());
+                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error");
+                }
+            } else {
+                // Unauthorized or user not found
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized or User not found. Please try logging in again!");
+            }
+
+
+        } catch (Exception e) {
+            // Handle parsing errors or other exceptions
+            System.out.println(e);
+            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error processing update request");
+        }
+    }
+
 
     private Response getUser(String username) {
         Optional<User> user = userService.findUserByUsername(username);

@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.repository.UserRepository;
 import at.technikum.apps.mtcg.repository.UserRepository_db;
 
@@ -26,5 +27,9 @@ public class UserService {
 
     public Optional<User> findUserByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    public UserData updateUserData(String username, UserData userData) {
+        return userRepository.updateUserData(userRepository.findByUsername(username).get().getId(), userData);
     }
 }
