@@ -45,7 +45,7 @@ public class UserController extends Controller {
 
         switch (request.getMethod()) {
             case "GET":
-                return getUser(username);
+                return getUser(username, request);
             case "PUT":
                 return updateUser(username, request);
         }
@@ -68,61 +68,82 @@ public class UserController extends Controller {
 
             // Get token and token's username from Authorization header
             String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null) {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized");
             }
             String[] authParts = authHeader.split("\\s+");
             String token = authParts[1];
 
             // Authenticate the token
+            // Authenticate the token
             boolean isAuthenticated = sessionService.authenticateToken(token);
-            boolean isMatchingRoute = sessionService.matchRoute(username, token);
-            boolean isAdmin = sessionService.isAdmin(username);
-
-            // Check if the authenticated user is admin or the same as the one being updated
-            if ((isAuthenticated && isMatchingRoute) || (isAuthenticated && isAdmin)) {
-                // Update user data
-                UserData updatedUserData = userService.updateUserData(username, userData); // Ensure this method is implemented
-
-                try {
-                    String jsonUserData = objectMapper.writeValueAsString(updatedUserData);
-                    return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, jsonUserData);
-                } catch (Exception e) {
-                    // Handle JSON serialization errors
-                    System.out.println("Error serializing updated user data: " + e.getMessage());
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error");
-                }
-            } else {
-                // Unauthorized or user not found
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized or User not found. Please try logging in again!");
+            if (!isAuthenticated) {
+                // If the token is not authenticated
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
             }
 
+            // Check if the username in token matches the requested username or if the user is an admin
+            boolean isMatchingRoute = sessionService.matchRoute(username, token);
+            boolean isAdmin = sessionService.isAdmin(token); // Ensure this method checks the token, not the username
+            if (!isMatchingRoute && !isAdmin) {
+                // If the authenticated user is neither the requested user nor an admin
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Access denied");
+            }
+
+            // Proceed with update if authorized
+            UserData updatedUserData = userService.updateUserData(username, userData);
+            String jsonUserData = objectMapper.writeValueAsString(updatedUserData);
+            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, jsonUserData);
 
         } catch (Exception e) {
-            // Handle parsing errors or other exceptions
-            System.out.println(e);
+            System.out.println("Error in updateUser: " + e.getMessage());
             return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error processing update request");
         }
     }
 
 
-    private Response getUser(String username) {
-        Optional<User> user = userService.findUserByUsername(username);
-        if (user.isPresent()) {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                String userData = objectMapper.writeValueAsString(user.get());
-                return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userData);
-            } catch (Exception e) {
-                // Log the exception and return an appropriate error message
-                System.out.println("Error converting user data to JSON: " + e.getMessage());
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user data.");
-            }
-        } else {
-            // User not found
-            return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "User not found!");
+    private Response getUser(String username, Request request) {
+        // Extract the token from the Authorization header
+        String authHeader = request.getAuthenticationHeader();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
+        }
+        String[] authParts = authHeader.split("\\s+");
+        String token = authParts[1];
+
+        // Authenticate the token and check if the username matches or if the user is admin
+        boolean isAuthenticated = sessionService.authenticateToken(token);
+        boolean isMatchingRoute = sessionService.matchRoute(username, token);
+        boolean isAdmin = sessionService.isAdmin(token);
+
+        if (!isAuthenticated) {
+            // If the token is not authenticated
+            return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
+        }
+
+        if (!isMatchingRoute && !isAdmin) {
+            // If the authenticated user is neither the requested user nor an admin
+            return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Access denied");
+        }
+
+        // Retrieve the user data if the token is authenticated and the username matches or the user is admin
+        Optional<User> userOptional = userService.findUserByUsername(username);
+        if (!userOptional.isPresent()) {
+            // If the user with the provided username does not exist
+            return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "User not found");
+        }
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String userDataJson = objectMapper.writeValueAsString(userOptional.get());
+            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userDataJson);
+        } catch (Exception e) {
+            // If JSON serialization fails
+            System.out.println("Error converting user data to JSON: " + e.getMessage());
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user data.");
         }
     }
+
 
 
     private Response getScoreboard(Request request) {

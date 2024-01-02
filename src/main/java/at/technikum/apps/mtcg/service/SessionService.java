@@ -33,8 +33,12 @@ public class SessionService {
         return userRepository.authenticateToken(token);
     }
 
-    public boolean isAdmin(String username) {
-        return userRepository.findByUsername(username).get().isAdmin();
+    public boolean isAdmin(String token) {
+        Optional<User> user = userRepository.findByToken(token);
+        if (user.isPresent()){
+            return user.get().isAdmin();
+        }
+        return false;
     }
 
     public boolean matchRoute(String username, String token) {
