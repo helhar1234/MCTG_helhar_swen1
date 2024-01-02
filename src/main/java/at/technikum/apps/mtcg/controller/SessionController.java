@@ -1,9 +1,13 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.TokenRequest;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Optional;
 
 public class SessionController extends Controller {
     @Override
@@ -24,6 +28,26 @@ public class SessionController extends Controller {
     }
 
     private Response loginUser(Request request) {
-        return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "loginUser");
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            // Assuming TokenRequest is the class used to represent the login credentials
+            TokenRequest tokenRequest = objectMapper.readValue(request.getBody(), TokenRequest.class);
+
+            // Assuming SessionService has a method getToken that returns an Optional<String>
+            Optional<String> token = sessionService.getToken(tokenRequest);
+
+            if (token.isPresent()) {
+                // Login successful, token is present
+                return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, token.get());
+            } else {
+                // Invalid username/password
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Invalid username/password");
+            }
+        } catch (Exception e) {
+            // Handle deserialization errors or other exceptions
+            System.out.println("Error during user login: " + e.getMessage());
+            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error processing login request");
+        }
     }
 }
