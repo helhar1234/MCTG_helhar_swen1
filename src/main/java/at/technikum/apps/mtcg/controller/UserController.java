@@ -1,9 +1,14 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.service.UserService;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Optional;
 
 public class UserController extends Controller {
     @Override
@@ -44,9 +49,30 @@ public class UserController extends Controller {
         return status(HttpStatus.BAD_REQUEST);
     }
 
-    private Response getUser(String username) {
-        return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "getUser" + username);
+    private final UserService userService;
+
+    public UserController() {
+        this.userService = new UserService();
     }
+
+    private Response getUser(String username) {
+        Optional<User> user = userService.findUserByUsername(username);
+        if (user.isPresent()) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                String userData = objectMapper.writeValueAsString(user.get());
+                return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userData);
+            } catch (Exception e) {
+                // Log the exception and return an appropriate error message
+                System.out.println("Error converting user data to JSON: " + e.getMessage());
+                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user data.");
+            }
+        } else {
+            // User not found
+            return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "User not found!");
+        }
+    }
+
 
     private Response getScoreboard(Request request) {
         return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "getScoreboard");
@@ -57,6 +83,24 @@ public class UserController extends Controller {
     }
 
     private Response createUser(Request request) {
-        return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "createUser");
+        try {
+            // Deserialize the JSON payload into a User object
+            ObjectMapper objectMapper = new ObjectMapper();
+            User user = objectMapper.readValue(request.getBody(), User.class);
+
+            // Attempt to create the user
+            boolean isCreated = userService.createUser(user);
+            if (isCreated) {
+                // User successfully created
+                return new Response(HttpStatus.CREATED, HttpContentType.TEXT_PLAIN, "User successfully created!");
+            } else {
+                // User with the same username already exists
+                return new Response(HttpStatus.CONFLICT, HttpContentType.TEXT_PLAIN, "User with same name already registered!");
+            }
+        } catch (Exception e) {
+            // Handle any deserialization or other exceptions
+            System.out.println(e);
+            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "An unexpecting error occured" + e);
+        }
     }
 }
