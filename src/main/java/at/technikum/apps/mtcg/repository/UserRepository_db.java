@@ -15,6 +15,7 @@ public class UserRepository_db implements UserRepository{
     private final String CREATE_USER_SQL = "INSERT INTO users (user_id, username, password, isAdmin) VALUES (?,?,?,?)";
     private final String SEARCH_USERNAME_SQL = "SELECT COUNT(*) AS count FROM users WHERE username = ?";
     private final String FIND_USER_SQL = "SELECT * FROM users WHERE username = ?";
+    private final String SAVE_TOKEN_SQL = "INSERT INTO access_token(user_fk, token_name) VALUES (?, ?) RETURNING token_name";
     @Override
     public boolean saveUser(User user) {
         try (
@@ -72,6 +73,32 @@ public class UserRepository_db implements UserRepository{
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
+
+    @Override
+    public Optional<String> generateToken(User user) {
+        try (
+                Connection connection = database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(SAVE_TOKEN_SQL)) {
+
+            // Prepare the token to be saved
+            statement.setString(1, user.getId());
+            statement.setString(2, user.getUsername() + "-mtcgToken");
+
+            // Execute the update and get the generated token
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Retrieve the token from the result set
+                    String returnedToken = resultSet.getString("token_name");
+                    return Optional.of(returnedToken);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error while generating token: " + e.getMessage());
+        }
+        // Return an empty Optional if there was an error
+        return Optional.empty();
+    }
+
 
     private User convertResultSetToUser(ResultSet resultSet) throws SQLException {
         User user = new User();

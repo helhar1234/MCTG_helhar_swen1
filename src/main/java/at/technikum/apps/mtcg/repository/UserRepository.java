@@ -10,4 +10,6 @@ public interface UserRepository {
     boolean isUsernameExists(String username);
 
     Optional<User> findByUsername(String username);
+
+    Optional<String> generateToken(User user);
 }

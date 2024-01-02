@@ -1,6 +1,8 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.TokenRequest;
+import at.technikum.apps.mtcg.service.SessionService;
+import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -25,6 +27,12 @@ public class SessionController extends Controller {
             return status(HttpStatus.BAD_REQUEST);
         }
         return status(HttpStatus.BAD_REQUEST);
+    }
+
+    private final SessionService sessionService;
+
+    public SessionController() {
+        this.sessionService = new SessionService();
     }
 
     private Response loginUser(Request request) {
