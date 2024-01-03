@@ -1,5 +1,6 @@
 package at.technikum.apps.mtcg.repository;
 
+import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
 
@@ -19,4 +20,8 @@ public interface UserRepository {
     UserData updateUserData(String id, UserData userData);
 
     Optional<User> findByToken(String token);
+
+    boolean updateCoins(String userId, int price);
+
+    boolean addCardToStack(String userId, Card card);
 }

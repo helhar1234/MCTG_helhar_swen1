@@ -1,5 +1,9 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.Card;
+import at.technikum.apps.mtcg.service.CardService;
+import at.technikum.apps.mtcg.service.SessionService;
+import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -31,6 +35,16 @@ public class CardController extends Controller {
         return status(HttpStatus.BAD_REQUEST);
     }
 
+    private final UserService userService;
+    private final SessionService sessionService;
+    private final CardService cardService;
+
+    public CardController() {
+        this.userService = new UserService();
+        this.sessionService = new SessionService();
+        this.cardService = new CardService();
+    }
+
     private Response createUserDeck(Request request) {
         return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "createUserDeck");
     }
@@ -39,7 +53,4 @@ public class CardController extends Controller {
         return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "getUserDeck");
     }
 
-    private Response getUserCards(Request request) {
-        return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "getUserCards");
-    }
 }

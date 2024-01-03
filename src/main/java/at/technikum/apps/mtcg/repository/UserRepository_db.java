@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.database.Database;
+import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
 
@@ -19,8 +20,9 @@ public class UserRepository_db implements UserRepository{
     private final String DELETE_EXPIRED_TOKEN_SQL = "DELETE FROM access_token WHERE token_timestamp < (CURRENT_TIMESTAMP - INTERVAL '20 MINUTE')";
     private final String AUTH_TOKEN_SQL = "SELECT * FROM access_token WHERE token_name = ? AND token_timestamp >= (CURRENT_TIMESTAMP - INTERVAL '20 MINUTE')";
     private final String SAVE_USERDATA_SQL = "INSERT INTO userdata (user_fk, name) VALUES (?, ?)";
-
     private final String FIND_USER_BY_TOKEN_SQL = "SELECT u.* FROM users u INNER JOIN access_token at ON u.user_id = at.user_fk WHERE at.token_name = ?";
+    private final String UPDATE_COINS_SQL = "UPDATE users SET coins = coins + ? WHERE user_id = ? AND coins + ? >= 0";
+    private final String ADD_CARD_TO_USER_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
     @Override
     public boolean saveUser(User user) {
         boolean success = false;
@@ -195,6 +197,53 @@ public class UserRepository_db implements UserRepository{
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
+
+    @Override
+    public boolean updateCoins(String userId, int price) {
+        boolean success = false;
+
+        // Prepare SQL statement that updates the user's coins by a certain price (which could be negative)
+        // This SQL uses the existing value of coins in the user table
+
+        try (Connection connection = database.getConnection();
+             PreparedStatement updateCoinsStmt = connection.prepareStatement(UPDATE_COINS_SQL)) {
+
+            updateCoinsStmt.setInt(1, price);
+            updateCoinsStmt.setString(2, userId);
+            updateCoinsStmt.setInt(3, price); // To ensure the final balance is not negative
+
+            // Execute the update statement
+            int affectedRows = updateCoinsStmt.executeUpdate();
+
+            // Check if the update was successful
+            success = affectedRows == 1;
+        } catch (SQLException e) {
+            System.out.println("Error updating coins: " + e.getMessage());
+            // You might want to handle specific SQL exceptions based on your business logic
+        }
+        return success;
+    }
+
+    @Override
+    public boolean addCardToStack(String userId, Card card) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement addCardStmt = connection.prepareStatement(ADD_CARD_TO_USER_SQL)) {
+
+            addCardStmt.setString(1, userId);
+            addCardStmt.setString(2, card.getId());
+
+            // Execute the insert statement
+            int affectedRows = addCardStmt.executeUpdate();
+
+            // Check if the insert was successful
+            return affectedRows == 1;
+        } catch (SQLException e) {
+            System.out.println("Error adding card to user's stack: " + e.getMessage());
+            return false;
+        }
+    }
+
+
 
     private UserData convertResultSetToUserData(ResultSet resultSet) throws SQLException {
         // Implement this method to convert a ResultSet to a UserData object.

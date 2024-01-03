@@ -45,7 +45,7 @@ group #green User Login
 end
 
 
-group Create Card Packages
+group #green Create Card Packages
     Client -> Server: POST /packages (Create Package)
     alt Package created
         Server --> Client: 201 (Package and cards created)
@@ -58,7 +58,7 @@ group Create Card Packages
     end
 end
 
-group Acquire a card package
+group #green Acquire a card package
     Client -> Server: POST /transactions/packages (Acquire Package)
     alt A package has been successfully bought
         Server --> Client: 200 (A package has been successfully bought)

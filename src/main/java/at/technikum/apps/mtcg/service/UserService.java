@@ -32,4 +32,8 @@ public class UserService {
     public UserData updateUserData(String username, UserData userData) {
         return userRepository.updateUserData(userRepository.findByUsername(username).get().getId(), userData);
     }
+
+    public Optional<User> getUserByToken(String token) {
+        return userRepository.findByToken(token);
+    }
 }

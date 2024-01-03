@@ -2,12 +2,15 @@ package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.Card;
+import at.technikum.apps.mtcg.entity.Package;
 import at.technikum.apps.mtcg.entity.PackageCard;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class CardRepository_db implements CardRepository{
@@ -17,6 +20,9 @@ public class CardRepository_db implements CardRepository{
     private final String SAVE_CARD_SQL = "INSERT INTO cards (card_id, name, damage, elementtype, cardtype) VALUES (?,?,?,?,?) RETURNING card_id";
     private final String CONNECT_CARDS_PACKAGES_SQL = "INSERT INTO cards_packages (card_fk, package_fk) VALUES (?,?)";
     private final String FIND_CARD_BY_ID_SQL = "SELECT * FROM cards WHERE card_id = ?";
+    private final String FIND_PACKAGE_BY_ID_SQL = "SELECT * FROM packages WHERE package_id = ?";
+
+    private final String FIND_CARDS_IN_PACKAGE_SQL = "SELECT c.* FROM cards c JOIN cards_packages cp ON c.card_id = cp.card_fk WHERE package_fk = ?";
     @Override
     public boolean savePackage(String id) {
         boolean success = false;
@@ -120,6 +126,58 @@ public class CardRepository_db implements CardRepository{
             // Optionally, handle or log the exception as appropriate for your application
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<Package> findPackageById(String id) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement findCardStmt = connection.prepareStatement(FIND_PACKAGE_BY_ID_SQL)) {
+
+            findCardStmt.setString(1, id);
+
+            try (ResultSet resultSet = findCardStmt.executeQuery()) {
+                if (resultSet.next()) {
+                    // Assuming you have a method to convert ResultSet to a Card object
+                    Package aPackage = convertResultSetToPackage(resultSet);
+                    return Optional.of(aPackage);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding package by ID: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Card[] getPackageCardsById(String packageId) {
+        List<Card> cards = new ArrayList<>();
+
+        try (Connection connection = database.getConnection();
+             PreparedStatement findCardsStmt = connection.prepareStatement(FIND_CARDS_IN_PACKAGE_SQL)) {
+
+            findCardsStmt.setString(1, packageId);
+
+            try (ResultSet resultSet = findCardsStmt.executeQuery()) {
+                while (resultSet.next()) {
+                    Card card = convertResultSetToCard(resultSet);
+                    cards.add(card);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding cards in package: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+
+        return cards.toArray(new Card[0]);
+    }
+
+
+    private Package convertResultSetToPackage(ResultSet resultSet) throws SQLException {
+        Package aPackage = new Package();
+        aPackage.setId(resultSet.getString("package_id"));
+        aPackage.setPrice(resultSet.getInt("price"));
+        return aPackage;
     }
 
     private Card convertResultSetToCard(ResultSet resultSet) throws SQLException {
