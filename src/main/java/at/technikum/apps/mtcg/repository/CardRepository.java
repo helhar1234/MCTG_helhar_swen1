@@ -20,4 +20,12 @@ public interface CardRepository {
     Card[] getPackageCardsById(String packageId);
 
     Card[] getUserCards(String userId);
+
+    Card[] getUserDeckCards(String userId);
+
+    boolean isCardInStack(String userId, String cardId);
+
+    boolean addCardToDeck(String userId, String cardId);
+
+    boolean resetDeck(String userId);
 }

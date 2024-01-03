@@ -23,6 +23,10 @@ public class CardRepository_db implements CardRepository{
     private final String FIND_PACKAGE_BY_ID_SQL = "SELECT * FROM packages WHERE package_id = ?";
     private final String FIND_CARDS_IN_PACKAGE_SQL = "SELECT c.* FROM cards c JOIN cards_packages cp ON c.card_id = cp.card_fk WHERE package_fk = ?";
     private final String FIND_CARDS_OF_USER_SQL = "SELECT c.* FROM cards c JOIN user_cards uc ON c.card_id = uc.card_fk WHERE user_fk = ?";
+    private final String FIND_CARDS_OF_USER_DECK_SQL = "SELECT c.* FROM cards c JOIN user_cards uc ON c.card_id = uc.card_fk WHERE user_fk = ? AND uc.indeck is true";
+    private final String CHECK_CARD_IN_STACK_SQL = "SELECT COUNT(*) FROM user_cards WHERE user_fk = ? AND card_fk = ?";
+    private final String ADD_CARDS_TO_DECK_SQL = "UPDATE user_cards SET indeck = ? WHERE card_fk = ? AND user_fk = ?";
+    private final String RESET_USER_DECK_SQL = "UPDATE user_cards SET indeck = ? WHERE user_fk = ?";
     @Override
     public boolean savePackage(String id) {
         boolean success = false;
@@ -194,6 +198,91 @@ public class CardRepository_db implements CardRepository{
 
         return cards.toArray(new Card[0]);
     }
+
+    @Override
+    public Card[] getUserDeckCards(String userId) {
+        List<Card> cards = new ArrayList<>();
+
+        try (Connection connection = database.getConnection();
+             PreparedStatement findUserCardsStmt = connection.prepareStatement(FIND_CARDS_OF_USER_DECK_SQL)) {
+
+            findUserCardsStmt.setString(1, userId);
+
+            try (ResultSet resultSet = findUserCardsStmt.executeQuery()) {
+                while (resultSet.next()) {
+                    Card card = convertResultSetToCard(resultSet);
+                    cards.add(card);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding cards of user: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+
+        return cards.toArray(new Card[0]);
+    }
+
+    @Override
+    public boolean isCardInStack(String userId, String cardId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(CHECK_CARD_IN_STACK_SQL)) {
+
+            stmt.setString(1, userId);
+            stmt.setString(2, cardId);
+
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                if (resultSet.next()) {
+                    // If the count is greater than 0, the card is in the stack
+                    return resultSet.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checking if card is in stack: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+        return false;
+    }
+
+    @Override
+    public boolean addCardToDeck(String userId, String cardId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement connectStmt = connection.prepareStatement(ADD_CARDS_TO_DECK_SQL)) {
+
+            connectStmt.setBoolean(1, true);
+            connectStmt.setString(2, cardId);
+            connectStmt.setString(3, userId);
+
+            // Execute the insert statement using executeUpdate
+            int affectedRows = connectStmt.executeUpdate();
+
+            // Check if the insert was successful based on affected rows
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.out.println("Error connecting card to deck: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean resetDeck(String userId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(RESET_USER_DECK_SQL)) {
+
+            stmt.setBoolean(1, false); // Assuming 'false' represents that the card is not in the deck
+            stmt.setString(2, userId);
+
+            // Execute the update statement
+            int affectedRows = stmt.executeUpdate();
+
+            // The operation is considered successful if one or more rows are affected or none are affected but the user has no deck cards
+            return affectedRows >= 0;
+        } catch (SQLException e) {
+            System.out.println("Error resetting user's deck: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+            return false;
+        }
+    }
+
 
 
     private Package convertResultSetToPackage(ResultSet resultSet) throws SQLException {

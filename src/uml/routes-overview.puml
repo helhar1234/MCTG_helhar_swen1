@@ -82,7 +82,7 @@ group #green Retrieve User Cards
     end
 end
 
-group Manage Deck
+group #green Manage Deck
     Client -> Server: GET /deck (Request Deck)
     alt Deck has cards
         Server --> Client: 200 (Deck Cards)
