@@ -3,6 +3,7 @@ package at.technikum.apps.mtcg.repository;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.apps.mtcg.entity.UserStats;
 
 import java.util.Optional;
 
@@ -24,4 +25,6 @@ public interface UserRepository {
     boolean updateCoins(String userId, int price);
 
     boolean addCardToStack(String userId, Card card);
+
+    UserStats[] getScoreboard();
 }

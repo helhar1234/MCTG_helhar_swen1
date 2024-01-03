@@ -4,6 +4,7 @@ import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.apps.mtcg.entity.UserStats;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class UserRepository_db implements UserRepository{
     private final String FIND_USER_BY_TOKEN_SQL = "SELECT u.* FROM users u INNER JOIN access_token at ON u.user_id = at.user_fk WHERE at.token_name = ?";
     private final String UPDATE_COINS_SQL = "UPDATE users SET coins = coins + ? WHERE user_id = ? AND coins + ? >= 0";
     private final String ADD_CARD_TO_USER_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
+    private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users ORDER BY elorating ASC";
     @Override
     public boolean saveUser(User user) {
         boolean success = false;
@@ -241,6 +243,28 @@ public class UserRepository_db implements UserRepository{
             System.out.println("Error adding card to user's stack: " + e.getMessage());
             return false;
         }
+    }
+
+    @Override
+    public UserStats[] getScoreboard() {
+        List<UserStats> scoreboard = new ArrayList<>();
+
+        try (Connection connection = database.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(GET_SCOREBOARD_SQL)) {
+
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                while (resultSet.next()) {
+                    String username = resultSet.getString("username");
+                    int eloRating = resultSet.getInt("elorating");
+                    scoreboard.add(new UserStats(username, eloRating));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving scoreboard: " + e.getMessage());
+            return new UserStats[0]; // Return an empty array in case of an exception
+        }
+
+        return scoreboard.toArray(new UserStats[0]);
     }
 
 
