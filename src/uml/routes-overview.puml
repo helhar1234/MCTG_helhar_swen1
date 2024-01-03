@@ -71,7 +71,7 @@ group #green Acquire a card package
     end
 end
 
-group Retrieve User Cards
+group #green Retrieve User Cards
     Client -> Server: GET /cards (Request User Cards)
     alt User has cards
         Server --> Client: 200 (User Cards)

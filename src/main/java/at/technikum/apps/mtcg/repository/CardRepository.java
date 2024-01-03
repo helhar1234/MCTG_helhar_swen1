@@ -18,4 +18,6 @@ public interface CardRepository {
     Optional<Package> findPackageById(String id);
 
     Card[] getPackageCardsById(String packageId);
+
+    Card[] getUserCards(String userId);
 }

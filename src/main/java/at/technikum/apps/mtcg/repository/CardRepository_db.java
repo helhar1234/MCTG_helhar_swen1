@@ -21,8 +21,8 @@ public class CardRepository_db implements CardRepository{
     private final String CONNECT_CARDS_PACKAGES_SQL = "INSERT INTO cards_packages (card_fk, package_fk) VALUES (?,?)";
     private final String FIND_CARD_BY_ID_SQL = "SELECT * FROM cards WHERE card_id = ?";
     private final String FIND_PACKAGE_BY_ID_SQL = "SELECT * FROM packages WHERE package_id = ?";
-
     private final String FIND_CARDS_IN_PACKAGE_SQL = "SELECT c.* FROM cards c JOIN cards_packages cp ON c.card_id = cp.card_fk WHERE package_fk = ?";
+    private final String FIND_CARDS_OF_USER_SQL = "SELECT c.* FROM cards c JOIN user_cards uc ON c.card_id = uc.card_fk WHERE user_fk = ?";
     @Override
     public boolean savePackage(String id) {
         boolean success = false;
@@ -166,6 +166,29 @@ public class CardRepository_db implements CardRepository{
             }
         } catch (SQLException e) {
             System.out.println("Error finding cards in package: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+
+        return cards.toArray(new Card[0]);
+    }
+
+    @Override
+    public Card[] getUserCards(String userId) {
+        List<Card> cards = new ArrayList<>();
+
+        try (Connection connection = database.getConnection();
+             PreparedStatement findUserCardsStmt = connection.prepareStatement(FIND_CARDS_OF_USER_SQL)) {
+
+            findUserCardsStmt.setString(1, userId);
+
+            try (ResultSet resultSet = findUserCardsStmt.executeQuery()) {
+                while (resultSet.next()) {
+                    Card card = convertResultSetToCard(resultSet);
+                    cards.add(card);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding cards of user: " + e.getMessage());
             // Optionally, handle or log the exception as appropriate for your application
         }
 
