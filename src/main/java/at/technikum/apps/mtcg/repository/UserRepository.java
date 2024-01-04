@@ -27,4 +27,8 @@ public interface UserRepository {
     boolean addCardToStack(String userId, Card card);
 
     UserStats[] getScoreboard();
+
+    Optional<String> findTokenByUserId(String userId);
+
+    boolean deleteToken(String userId);
 }

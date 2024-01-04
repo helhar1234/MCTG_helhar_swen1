@@ -104,7 +104,7 @@ group #green Manage Deck
     end
 end
 
-group User Stats and Scoreboard
+group #green User Stats and Scoreboard
     Client -> Server: GET /stats (Request Stats)
     alt Stats retrieved
         Server --> Client: 200 (User Stats)
