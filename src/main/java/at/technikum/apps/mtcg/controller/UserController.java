@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.apps.mtcg.entity.UserStats;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.apps.mtcg.entity.User;
@@ -10,6 +11,7 @@ import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class UserController extends Controller {
@@ -147,12 +149,73 @@ public class UserController extends Controller {
 
 
     private Response getScoreboard(Request request) {
-        return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "getScoreboard");
+        try {
+            // Extract the token from the Authorization header
+            String authHeader = request.getAuthenticationHeader();
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
+            }
+            String[] authParts = authHeader.split("\\s+");
+            String token = authParts[1];
+
+            // Authenticate the token
+            boolean isAuthenticated = sessionService.authenticateToken(token);
+            if (!isAuthenticated) {
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
+            }
+
+            // Retrieve the scoreboard
+            UserStats[] scoreboard = userService.getScoreboard();
+            if (scoreboard == null) {
+                // Handle the case where scoreboard is null
+                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing scoreboard.");
+            }
+
+            // Respond with the scoreboard
+            ObjectMapper objectMapper = new ObjectMapper();
+            String scoreboardJson = objectMapper.writeValueAsString(scoreboard);
+            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, scoreboardJson);
+
+        } catch (Exception e) {
+            System.out.println("Error retrieving scoreboard: " + e.getMessage());
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing scoreboard.");
+        }
     }
 
+
     private Response getStats(Request request) {
-        return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "getStats");
+        try {
+            // Extract the token from the Authorization header
+            String authHeader = request.getAuthenticationHeader();
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
+            }
+            String[] authParts = authHeader.split("\\s+");
+            String token = authParts[1];
+
+            // Authenticate the token
+            boolean isAuthenticated = sessionService.authenticateToken(token);
+            if (!isAuthenticated) {
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
+            }
+
+            // Get the user
+            Optional<User> user = userService.getUserByToken(token);
+            if (user.isEmpty()) {
+                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
+            }
+
+            // Respond with the ELO rating of the user
+            ObjectMapper objectMapper = new ObjectMapper();
+            String userStatsJson = objectMapper.writeValueAsString(Map.of("eloRating", user.get().getEloRating()));
+            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userStatsJson);
+
+        } catch (Exception e) {
+            System.out.println("Error retrieving user stats: " + e.getMessage());
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user stats.");
+        }
     }
+
 
     private Response createUser(Request request) {
         try {

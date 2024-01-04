@@ -16,18 +16,20 @@ public class SessionService {
     }
 
     public Optional<String> getToken(TokenRequest tokenRequest) {
-        // Find user by username
         Optional<User> userOptional = userRepository.findByUsername(tokenRequest.getUsername());
 
-        // Check if the user is present and password matches
         if (userOptional.isPresent() && Objects.equals(userOptional.get().getPassword(), tokenRequest.getPassword())) {
-            // Generate token if credentials are valid
+            // Check if a token already exists for the user
+            Optional<String> existingToken = userRepository.findTokenByUserId(userOptional.get().getId());
+            if (existingToken.isPresent()) {
+                userRepository.deleteToken(userOptional.get().getId());
+            }
+            // Generate a new token
             return userRepository.generateToken(userOptional.get());
         }
-
-        // Return empty if user is not found or password does not match
         return Optional.empty();
     }
+
 
     public boolean authenticateToken(String token) {
         return userRepository.authenticateToken(token);

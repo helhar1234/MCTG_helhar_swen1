@@ -2,6 +2,7 @@ package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.apps.mtcg.entity.UserStats;
 import at.technikum.apps.mtcg.repository.UserRepository;
 import at.technikum.apps.mtcg.repository.UserRepository_db;
 
@@ -35,5 +36,9 @@ public class UserService {
 
     public Optional<User> getUserByToken(String token) {
         return userRepository.findByToken(token);
+    }
+
+    public UserStats[] getScoreboard() {
+        return userRepository.getScoreboard();
     }
 }
