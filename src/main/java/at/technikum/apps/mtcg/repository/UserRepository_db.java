@@ -6,6 +6,7 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.entity.UserStats;
 
+import java.net.FileNameMap;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ public class UserRepository_db implements UserRepository{
     private final String CREATE_USER_SQL = "INSERT INTO users (user_id, username, password, isAdmin) VALUES (?,?,?,?)";
     private final String SEARCH_USERNAME_SQL = "SELECT COUNT(*) AS count FROM users WHERE username = ?";
     private final String FIND_USER_SQL = "SELECT * FROM users WHERE username = ?";
+    private final String FIND_USER_BY_ID_SQL = "SELECT * FROM users WHERE user_id = ?";
     private final String FIND_TOKEN_BY_USER_SQL = "SELECT token_name FROM access_token WHERE user_fk = ?";
     private final String SAVE_TOKEN_SQL = "INSERT INTO access_token(user_fk, token_name) VALUES (?, ?) RETURNING token_name";
     private final String DELETE_EXPIRED_TOKEN_SQL = "DELETE FROM access_token WHERE token_timestamp < (CURRENT_TIMESTAMP - INTERVAL '20 MINUTE')";
@@ -303,6 +305,27 @@ public class UserRepository_db implements UserRepository{
             System.out.println("Error deleting tokens: " + e.getMessage());
             return false;
         }
+    }
+
+    @Override
+    public Optional<User> findUserById(String id) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_USER_BY_ID_SQL)) {
+
+            statement.setString(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Assuming convertResultSetToUser is implemented correctly to map the ResultSet to a User object
+                    User user = convertResultSetToUser(resultSet);
+                    return Optional.of(user);
+                }
+            } catch (SQLException e) {
+                System.out.println("Error executing findUserById: " + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.out.println("Database connection error: " + e.getMessage());
+        }
+        return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
 

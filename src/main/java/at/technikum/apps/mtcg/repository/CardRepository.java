@@ -28,4 +28,16 @@ public interface CardRepository {
     boolean addCardToDeck(String userId, String cardId);
 
     boolean resetDeck(String userId);
+
+    String getFirstPackageNotPossessing(String userId);
+
+    boolean deletePackage(String packageId);
+
+    Optional<Package> getAvailablePackages(String packageId);
+
+    boolean isCardInDeck(String userId, String cardId);
+
+    boolean deleteCardFromStack(String userId, String cardId);
+
+    boolean addCardToStack(String userId, String cardId);
 }

@@ -4,11 +4,14 @@ public class Package {
     private String id;
     private int price;
 
+    private boolean sold;
+
     public Package(){}
 
-    Package(String id, int price){
+    Package(String id, int price, boolean sold){
         this.id = id;
         this.price = price;
+        this.sold = sold;
     }
 
     public String getId() {
@@ -25,5 +28,13 @@ public class Package {
 
     public void setPrice(int price) {
         this.price = price;
+    }
+
+    public boolean isSold() {
+        return sold;
+    }
+
+    public void setSold(boolean sold) {
+        this.sold = sold;
     }
 }

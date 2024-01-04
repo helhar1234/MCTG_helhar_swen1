@@ -21,12 +21,18 @@ public class CardRepository_db implements CardRepository{
     private final String CONNECT_CARDS_PACKAGES_SQL = "INSERT INTO cards_packages (card_fk, package_fk) VALUES (?,?)";
     private final String FIND_CARD_BY_ID_SQL = "SELECT * FROM cards WHERE card_id = ?";
     private final String FIND_PACKAGE_BY_ID_SQL = "SELECT * FROM packages WHERE package_id = ?";
+    private final String FIND_AVAILABLE_PACKAGE_BY_ID_SQL = "SELECT * FROM packages WHERE package_id = ? AND sold is false";
+    private final String GET_FIRST_PACKAGE_NOT_POSSESSING_SQL = "SELECT p.package_id FROM packages p WHERE NOT EXISTS (SELECT 1 FROM cards_packages cp JOIN user_cards uc ON cp.card_fk = uc.card_fk WHERE cp.package_fk = p.package_id AND uc.user_fk = ?) AND p.sold = false ORDER BY p.orderid ASC LIMIT 1";
     private final String FIND_CARDS_IN_PACKAGE_SQL = "SELECT c.* FROM cards c JOIN cards_packages cp ON c.card_id = cp.card_fk WHERE package_fk = ?";
+    private final String UPDATE_PACKAGE_SOLD_SQL = "UPDATE packages SET sold = true WHERE package_id = ?";
     private final String FIND_CARDS_OF_USER_SQL = "SELECT c.* FROM cards c JOIN user_cards uc ON c.card_id = uc.card_fk WHERE user_fk = ?";
     private final String FIND_CARDS_OF_USER_DECK_SQL = "SELECT c.* FROM cards c JOIN user_cards uc ON c.card_id = uc.card_fk WHERE user_fk = ? AND uc.indeck is true";
     private final String CHECK_CARD_IN_STACK_SQL = "SELECT COUNT(*) FROM user_cards WHERE user_fk = ? AND card_fk = ?";
+    private final String CHECK_CARD_IN_DECK_SQL = "SELECT COUNT(*) FROM user_cards WHERE user_fk = ? AND card_fk = ? AND indeck is true";
     private final String ADD_CARDS_TO_DECK_SQL = "UPDATE user_cards SET indeck = ? WHERE card_fk = ? AND user_fk = ?";
     private final String RESET_USER_DECK_SQL = "UPDATE user_cards SET indeck = ? WHERE user_fk = ?";
+    private final String DELETE_CARD_FROM_STACK_SQL = "DELETE FROM user_cards WHERE user_fk = ? AND card_fk = ?";
+    private final String ADD_CARD_TO_STACK_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
     @Override
     public boolean savePackage(String id) {
         boolean success = false;
@@ -229,7 +235,6 @@ public class CardRepository_db implements CardRepository{
 
             stmt.setString(1, userId);
             stmt.setString(2, cardId);
-
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
                     // If the count is greater than 0, the card is in the stack
@@ -283,12 +288,125 @@ public class CardRepository_db implements CardRepository{
         }
     }
 
+    @Override
+    public String getFirstPackageNotPossessing(String userId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(GET_FIRST_PACKAGE_NOT_POSSESSING_SQL)) {
+
+            stmt.setString(1, userId);
+
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getString("package_id");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding first package not possessing: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public boolean deletePackage(String packageId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(UPDATE_PACKAGE_SOLD_SQL)) {
+
+            stmt.setString(1, packageId);
+
+            // Execute update statement
+            int affectedRows = stmt.executeUpdate();
+
+            // Return true if the update was successful (one row updated)
+            return affectedRows == 1;
+
+        } catch (SQLException e) {
+            System.out.println("Error updating package sold status: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public Optional<Package> getAvailablePackages(String packageId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement findCardStmt = connection.prepareStatement(FIND_AVAILABLE_PACKAGE_BY_ID_SQL)) {
+
+            findCardStmt.setString(1, packageId);
+
+            try (ResultSet resultSet = findCardStmt.executeQuery()) {
+                if (resultSet.next()) {
+                    // Assuming you have a method to convert ResultSet to a Card object
+                    Package aPackage = convertResultSetToPackage(resultSet);
+                    return Optional.of(aPackage);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error finding package by ID: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean isCardInDeck(String userId, String cardId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(CHECK_CARD_IN_DECK_SQL)) {
+
+            stmt.setString(1, userId);
+            stmt.setString(2, cardId);
+
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                if (resultSet.next()) {
+                    // If the count is greater than 0, the card is in the stack
+                    return resultSet.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checking if card is in stack: " + e.getMessage());
+            // Optionally, handle or log the exception as appropriate for your application
+        }
+        return false;
+    }
+
+    @Override
+    public boolean deleteCardFromStack(String userId, String cardId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement deleteStmt = connection.prepareStatement(DELETE_CARD_FROM_STACK_SQL)) {
+
+            deleteStmt.setString(1, userId);
+            deleteStmt.setString(2, cardId);
+
+
+            int affectedRows = deleteStmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.out.println("Error deleting card from user stack: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean addCardToStack(String userId, String cardId) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement addStmt = connection.prepareStatement(ADD_CARD_TO_STACK_SQL)) {
+
+            addStmt.setString(1, userId);
+            addStmt.setString(2, cardId);
+
+
+            int affectedRows = addStmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.out.println("Error saving card to user stack: " + e.getMessage());
+            return false;
+        }
+    }
 
 
     private Package convertResultSetToPackage(ResultSet resultSet) throws SQLException {
         Package aPackage = new Package();
         aPackage.setId(resultSet.getString("package_id"));
         aPackage.setPrice(resultSet.getInt("price"));
+        aPackage.setSold(resultSet.getBoolean("sold"));
         return aPackage;
     }
 

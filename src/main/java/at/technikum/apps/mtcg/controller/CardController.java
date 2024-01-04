@@ -22,16 +22,21 @@ public class CardController extends Controller {
 
     @Override
     public Response handle(Request request) {
-        if (request.getRoute().equals("/cards")) {
+        // Extract the base route without query parameters
+        String baseRoute = request.getRoute().split("\\?")[0];
+
+        if (baseRoute.equals("/cards")) {
             switch (request.getMethod()) {
                 case "GET":
                     return getUserCards(request);
             }
             return status(HttpStatus.BAD_REQUEST);
-        } else if (request.getRoute().equals("/deck")) {
+        } else if (baseRoute.equals("/deck")) {
             switch (request.getMethod()) {
                 case "GET":
-                    return getUserDeck(request);
+                    // Check for query parameters
+                    String queryParams = request.getRoute().contains("?") ? request.getRoute().split("\\?")[1] : "";
+                    return getUserDeck(request, queryParams);
                 case "PUT":
                     return createUserDeck(request);
             }
@@ -39,6 +44,7 @@ public class CardController extends Controller {
         }
         return status(HttpStatus.BAD_REQUEST);
     }
+
 
     private final UserService userService;
     private final SessionService sessionService;
@@ -108,7 +114,8 @@ public class CardController extends Controller {
     }
 
 
-    private Response getUserDeck(Request request) {
+    private Response getUserDeck(Request request, String queryParams) {
+        boolean isPlainFormat = queryParams.equals("format=plain");
         try {
             // Extract the token from the Authorization header
             String authHeader = request.getAuthenticationHeader();
@@ -136,15 +143,34 @@ public class CardController extends Controller {
                 return new Response(HttpStatus.NO_CONTENT, HttpContentType.TEXT_PLAIN, "The request was fine, but the user doesn't have any cards");
             }
 
-            // Respond with the user's cards in JSON format
-            ObjectMapper objectMapper = new ObjectMapper();
-            String cardsJson = objectMapper.writeValueAsString(cards);
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, cardsJson);
+            if (isPlainFormat) {
+                // Return a plain text representation of the deck
+                String plainDeck = convertDeckToPlainText(cards);
+                return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, plainDeck);
+            } else {
+                // Return the default JSON representation
+                ObjectMapper objectMapper = new ObjectMapper();
+                String deckJson = objectMapper.writeValueAsString(cards);
+                return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, deckJson);
+            }
 
         } catch (Exception e) {
             System.out.println("Error retrieving user's cards: " + e.getMessage());
             return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error retrieving user's cards");
         }
+    }
+    private String convertDeckToPlainText(Card[] deckCards) {
+        // Convert the array of Cards into a plain text string
+        StringBuilder plainTextBuilder = new StringBuilder();
+        for (Card card : deckCards) {
+            plainTextBuilder.append("Card Id: ").append(card.getId())
+                    .append(", Name: ").append(card.getName())
+                    .append(", Damage ").append(card.getDamage())
+                    .append(", Type ").append(card.getCardType())
+                    .append(", Element ").append(card.getElementType())
+                    .append("\n");
+        }
+        return plainTextBuilder.toString();
     }
     private Response getUserCards(Request request) {
         try {

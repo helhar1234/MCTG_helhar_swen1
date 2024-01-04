@@ -129,7 +129,7 @@ group Battle Engagement
     end
 end
 
-group Trading Deals Management
+group #green Trading Deals Management
     Client -> Server: GET /tradings (Retrieve Trading Deals)
     alt Deals available
         Server --> Client: 200 (Trading Deals)

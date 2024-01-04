@@ -81,9 +81,17 @@ public class PackageService {
                 return false;
             }
         }
+        cardRepository.deletePackage(packageId);
 
         // If all cards are successfully added to the user's stack, return true
         return true;
     }
 
+    public String getRandomPackage(String userId) {
+        return cardRepository.getFirstPackageNotPossessing(userId);
+    }
+
+    public Optional<Package> getAvailablePackages(String packageId) {
+        return cardRepository.getAvailablePackages(packageId);
+    }
 }

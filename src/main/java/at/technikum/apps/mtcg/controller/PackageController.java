@@ -81,8 +81,15 @@ public class PackageController extends Controller {
             ObjectMapper objectMapper = new ObjectMapper();
             String packageId = objectMapper.convertValue(request.getBody(), String.class);
 
+            // If no package ID provided, get a random package ID
+            if (packageId == null || packageId.isEmpty()) {
+                packageId = packageService.getRandomPackage(user.get().getId());
+                if (packageId == null) {
+                    return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "No available packages for buying");
+                }
+            }
             // Retrieve the package
-            Optional<Package> aPackage = packageService.getPackageById(packageId);
+            Optional<Package> aPackage = packageService.getAvailablePackages(packageId);
             if (aPackage.isEmpty()) {
                 return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "No card package available for buying");
             }

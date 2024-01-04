@@ -36,4 +36,8 @@ public class CardService {
     public boolean resetDeck(String userId) {
         return cardRepository.resetDeck(userId);
     }
+
+    public boolean isCardInDeck(String userId, String cardId) {
+        return cardRepository.isCardInDeck(userId, cardId);
+    }
 }

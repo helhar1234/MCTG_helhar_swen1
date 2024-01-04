@@ -1,9 +1,6 @@
 package at.technikum.apps.mtcg.repository;
 
-import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.entity.UserData;
-import at.technikum.apps.mtcg.entity.UserStats;
+import at.technikum.apps.mtcg.entity.*;
 
 import java.util.Optional;
 
@@ -31,4 +28,6 @@ public interface UserRepository {
     Optional<String> findTokenByUserId(String userId);
 
     boolean deleteToken(String userId);
+
+    Optional<User> findUserById(String id);
 }
