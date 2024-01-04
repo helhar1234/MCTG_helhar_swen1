@@ -4,6 +4,7 @@ package at.technikum.server.http;
 public enum HttpStatus {
     OK(200, "Request successfully processed"),
     CREATED(201, "Resource successfully created"),
+    ACCEPTED(202, "Accepted request"),
     NO_CONTENT(204, "Request processed, no content returned"),
     BAD_REQUEST(400, "Bad request syntax or unsupported request"),
     UNAUTHORIZED(401, "Unauthorized access"),

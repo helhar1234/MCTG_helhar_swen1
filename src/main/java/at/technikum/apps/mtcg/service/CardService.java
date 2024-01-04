@@ -40,4 +40,10 @@ public class CardService {
     public boolean isCardInDeck(String userId, String cardId) {
         return cardRepository.isCardInDeck(userId, cardId);
     }
+
+    public boolean hasDeckSet(String userId) {
+        Card[] deckCards = cardRepository.getUserDeckCards(userId);
+        return deckCards != null && deckCards.length == 4;
+    }
+
 }
