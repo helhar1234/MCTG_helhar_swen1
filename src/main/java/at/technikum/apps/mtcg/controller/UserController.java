@@ -14,6 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.Optional;
 
+// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
+// TODO: MAKE STATS CONTROLLER SEPERATE
+// TODO: MAKE SCOREBOARD CONTROLLER SEPERATE
 public class UserController extends Controller {
     @Override
     public boolean supports(String route) {

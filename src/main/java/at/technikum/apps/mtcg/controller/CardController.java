@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
 
+// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
+// TODO: MAKE DECK CONTROLLER SEPERATE
 public class CardController extends Controller {
     @Override
     public boolean supports(String route) {

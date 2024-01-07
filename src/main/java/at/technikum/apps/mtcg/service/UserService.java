@@ -9,7 +9,8 @@ import at.technikum.apps.mtcg.repository.UserRepository_db;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
+// TODO: MAKE STATS & SCOREBOARD SERVICE SEPERATE
 public class UserService {
     private final UserRepository userRepository;
 

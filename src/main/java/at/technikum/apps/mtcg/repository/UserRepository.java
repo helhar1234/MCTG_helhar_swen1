@@ -3,6 +3,9 @@ package at.technikum.apps.mtcg.repository;
 import at.technikum.apps.mtcg.entity.*;
 
 import java.util.Optional;
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
+// TODO: MAKE SESSION-REPO SEPERATE
+// TODO: MAKE STATS+SCOREBOARD-REPO SEPERATE
 
 public interface UserRepository {
     boolean authenticateToken(String token);

@@ -8,7 +8,7 @@ import at.technikum.apps.mtcg.repository.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
-
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class BattleLogic {
     private final BattleRepository battleRepository;
     private final UserRepository userRepository;

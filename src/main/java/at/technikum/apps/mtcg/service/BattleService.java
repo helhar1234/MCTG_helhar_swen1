@@ -7,6 +7,7 @@ import at.technikum.apps.mtcg.repository.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class BattleService {
     private final BattleRepository battleRepository;
     private final BattleLogic battleLogic;

@@ -5,7 +5,7 @@ import at.technikum.apps.mtcg.repository.CardRepository;
 import at.technikum.apps.mtcg.repository.CardRepository_db;
 
 import java.util.Optional;
-
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class CardService {
     private final CardRepository cardRepository;
 

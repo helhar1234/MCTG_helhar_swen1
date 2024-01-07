@@ -11,6 +11,7 @@ import at.technikum.apps.mtcg.repository.UserRepository_db;
 import java.util.Optional;
 import java.util.UUID;
 
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class PackageService {
 
     private final CardRepository cardRepository;

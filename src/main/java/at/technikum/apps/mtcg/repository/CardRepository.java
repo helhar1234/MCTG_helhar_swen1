@@ -6,6 +6,9 @@ import at.technikum.apps.mtcg.entity.PackageCard;
 
 import java.util.Optional;
 
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
+// TODO: MAKE SEPERATE PACKAGE-REPO
+
 public interface CardRepository {
     boolean savePackage(String id);
 

@@ -4,6 +4,7 @@ import at.technikum.apps.mtcg.entity.TradeRequest;
 
 import java.util.Optional;
 
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public interface TradingRepository {
     Optional<TradeRequest> getTradeById(String id);
 

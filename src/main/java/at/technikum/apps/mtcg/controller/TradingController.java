@@ -15,6 +15,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
 
+// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
+// TODO: SHORTEN CODE BY USING FUNCTIONS FOR DUPLICATE LOGIC
+
 public class TradingController extends Controller {
     @Override
     public boolean supports(String route) {

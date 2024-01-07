@@ -6,6 +6,7 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.*;
 
 import java.util.Optional;
+// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 
 public class TradingService {
     private final TradingRepository tradingRepository;

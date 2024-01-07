@@ -7,7 +7,7 @@ import at.technikum.apps.mtcg.repository.UserRepository_db;
 
 import java.util.Objects;
 import java.util.Optional;
-
+// TODO: ADD COMMENTS
 public class SessionService {
     private final UserRepository userRepository;
 
