@@ -6,9 +6,10 @@ public class Package {
 
     private boolean sold;
 
-    public Package(){}
+    public Package() {
+    }
 
-    Package(String id, int price, boolean sold){
+    Package(String id, int price, boolean sold) {
         this.id = id;
         this.price = price;
         this.sold = sold;

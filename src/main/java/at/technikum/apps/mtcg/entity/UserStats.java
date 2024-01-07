@@ -4,7 +4,8 @@ public class UserStats {
     private String username;
     private int eloRating;
 
-    public UserStats(){}
+    public UserStats() {
+    }
 
     // Constructor
     public UserStats(String username, int eloRating) {

@@ -12,7 +12,7 @@ public abstract class Controller {
     public abstract Response handle(Request request);
 
     protected Response status(HttpStatus httpStatus) {
-        return new Response(httpStatus, HttpContentType.APPLICATION_JSON, "{ \"error\": \""+ httpStatus.getMessage() + "\"}");
+        return new Response(httpStatus, HttpContentType.APPLICATION_JSON, "{ \"error\": \"" + httpStatus.getMessage() + "\"}");
     }
 
     // THOUGHT: more functionality e.g. ok(), json(), etc

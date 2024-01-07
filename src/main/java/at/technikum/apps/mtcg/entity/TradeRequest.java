@@ -10,16 +10,17 @@ public class TradeRequest {
     private String type;
     private int minimumDamage;
 
-    public TradeRequest(){}
+    public TradeRequest() {
+    }
 
-    public TradeRequest(String id, String cardToTrade, String type, int minimumDamage){
+    public TradeRequest(String id, String cardToTrade, String type, int minimumDamage) {
         this.id = id;
         this.cardToTrade = cardToTrade;
         this.type = type;
         this.minimumDamage = minimumDamage;
     }
 
-    public TradeRequest(String id, String userId, String username, String cardToTrade, String cardName, int cardDamage, String type, int minimumDamage){
+    public TradeRequest(String id, String userId, String username, String cardToTrade, String cardName, int cardDamage, String type, int minimumDamage) {
         this.id = id;
         this.userId = userId;
         this.username = username;
@@ -59,7 +60,7 @@ public class TradeRequest {
         this.minimumDamage = minimumDamage;
     }
 
-    public int getMinimumDamage(){
+    public int getMinimumDamage() {
         return minimumDamage;
     }
 

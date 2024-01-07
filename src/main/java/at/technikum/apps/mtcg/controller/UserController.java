@@ -1,26 +1,23 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
-import at.technikum.apps.mtcg.entity.UserStats;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.UserService;
-import at.technikum.apps.mtcg.entity.User;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.Map;
 import java.util.Optional;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
-// TODO: MAKE STATS CONTROLLER SEPERATE
-// TODO: MAKE SCOREBOARD CONTROLLER SEPERATE
+
 public class UserController extends Controller {
     @Override
     public boolean supports(String route) {
-        return route.startsWith("/users") || route.startsWith("/stats") || route.startsWith("/scoreboard");
+        return route.startsWith("/users");
     }
 
     @Override
@@ -29,18 +26,6 @@ public class UserController extends Controller {
             switch (request.getMethod()) {
                 case "POST":
                     return createUser(request);
-            }
-            return status(HttpStatus.BAD_REQUEST);
-        } else if (request.getRoute().equals("/stats")) {
-            switch (request.getMethod()) {
-                case "GET":
-                    return getStats(request);
-            }
-            return status(HttpStatus.BAD_REQUEST);
-        } else if (request.getRoute().equals("/scoreboard")) {
-            switch (request.getMethod()) {
-                case "GET":
-                    return getScoreboard(request);
             }
             return status(HttpStatus.BAD_REQUEST);
         }
@@ -57,6 +42,7 @@ public class UserController extends Controller {
 
         return status(HttpStatus.BAD_REQUEST);
     }
+
     private final UserService userService;
     private final SessionService sessionService;
 
@@ -150,89 +136,6 @@ public class UserController extends Controller {
     }
 
 
-
-    private Response getScoreboard(Request request) {
-        try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
-
-            // Authenticate the token
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
-
-            // Retrieve the scoreboard
-            UserStats[] scoreboard = userService.getScoreboard();
-            if (scoreboard == null) {
-                // Handle the case where scoreboard is null
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing scoreboard.");
-            }
-
-            // Respond with the scoreboard
-            ObjectMapper objectMapper = new ObjectMapper();
-            String scoreboardJson = objectMapper.writeValueAsString(scoreboard);
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, scoreboardJson);
-
-        } catch (Exception e) {
-            System.out.println("Error retrieving scoreboard: " + e.getMessage());
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing scoreboard.");
-        }
-    }
-
-
-    private Response getStats(Request request) {
-        try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
-
-            // Authenticate the token
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
-
-            // Get the user
-            Optional<User> user = userService.getUserByToken(token);
-            if (user.isEmpty()) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
-            }
-
-            int wins = userService.getUserWins(user.get().getId());
-            int battles = userService.getUserBattles(user.get().getId());
-
-// Create a map with the user stats
-            Map<String, Object> userStats = Map.of(
-                    "eloRating", user.get().getEloRating(),
-                    "wins", wins,
-                    "totalBattles", battles
-            );
-
-// Serialize the map to JSON
-            ObjectMapper objectMapper = new ObjectMapper();
-            String userStatsJson = objectMapper.writeValueAsString(userStats);
-
-// Return the response
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userStatsJson);
-
-
-        } catch (Exception e) {
-            System.out.println("Error retrieving user stats: " + e.getMessage());
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user stats.");
-        }
-    }
-
-
     private Response createUser(Request request) {
         try {
             // Deserialize the JSON payload into a User object
@@ -240,8 +143,8 @@ public class UserController extends Controller {
             User user = objectMapper.readValue(request.getBody(), User.class);
 
             // Attempt to create the user
-            boolean isCreated = userService.createUser(user);
-            if (isCreated) {
+            Optional<User> isCreated = userService.createUser(user);
+            if (isCreated.isPresent()) {
                 // User successfully created
                 return new Response(HttpStatus.CREATED, HttpContentType.TEXT_PLAIN, "User successfully created!");
             } else {

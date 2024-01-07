@@ -5,11 +5,11 @@ public class UserData {
     private String bio;
     private String image;
 
-    public UserData(){
+    public UserData() {
 
     }
 
-    UserData(String name, String bio, String image){
+    UserData(String name, String bio, String image) {
         this.name = name;
         this.bio = bio;
         this.image = image;

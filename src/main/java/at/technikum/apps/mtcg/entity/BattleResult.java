@@ -1,6 +1,5 @@
 package at.technikum.apps.mtcg.entity;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 
 public class BattleResult {
@@ -12,16 +11,17 @@ public class BattleResult {
     private Timestamp start_time;
     private String battleLog;
 
-    BattleResult(){}
+    BattleResult() {
+    }
 
-    public BattleResult(String id, User playerA, String status){
+    public BattleResult(String id, User playerA, String status) {
         this.id = id;
         this.playerA = playerA;
         this.status = status;
 
     }
 
-    public BattleResult(String id, User playerA, User playerB, String status, User winner, Timestamp start_time, String battleLog){
+    public BattleResult(String id, User playerA, User playerB, String status, User winner, Timestamp start_time, String battleLog) {
         this.id = id;
         this.playerA = playerA;
         this.playerB = playerB;

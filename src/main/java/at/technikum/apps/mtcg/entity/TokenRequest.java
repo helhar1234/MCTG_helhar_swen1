@@ -4,9 +4,10 @@ public class TokenRequest {
     private String username;
     private String password;
 
-    TokenRequest(){}
+    TokenRequest() {
+    }
 
-    TokenRequest(String username, String password){
+    TokenRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }

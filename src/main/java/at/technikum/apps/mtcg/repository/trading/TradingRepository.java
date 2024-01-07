@@ -1,4 +1,4 @@
-package at.technikum.apps.mtcg.repository;
+package at.technikum.apps.mtcg.repository.trading;
 
 import at.technikum.apps.mtcg.entity.TradeRequest;
 

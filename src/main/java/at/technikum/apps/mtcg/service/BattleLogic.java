@@ -3,11 +3,16 @@ package at.technikum.apps.mtcg.service;
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.repository.*;
+import at.technikum.apps.mtcg.repository.battle.BattleRepository;
+import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
+import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.apps.mtcg.repository.card.CardRepository_db;
+import at.technikum.apps.mtcg.repository.user.UserRepository;
+import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
+
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class BattleLogic {
     private final BattleRepository battleRepository;
@@ -62,7 +67,7 @@ public class BattleLogic {
             if (winnerCard != null) {
                 if (winnerCard.equals(cardA)) {
                     roundWinner = playerA;
-                    if (!cardRepository.isCardInStack(roundWinner.getId(), cardB.getId())){
+                    if (!cardRepository.isCardInStack(roundWinner.getId(), cardB.getId())) {
                         cardRepository.deleteCardFromStack(playerB.getId(), cardB.getId());
                         cardRepository.deleteCardFromStack(roundWinner.getId(), cardA.getId());
                         cardRepository.addCardToStack(roundWinner.getId(), cardB.getId());
@@ -162,7 +167,8 @@ public class BattleLogic {
         // Define the winner based on special rules
         if (cardA.getName().equalsIgnoreCase("Goblin") && cardB.getName().equalsIgnoreCase("Dragon")) return cardB;
         if (cardA.getName().equalsIgnoreCase("Wizzard") && cardB.getName().equalsIgnoreCase("Ork")) return cardA;
-        if (cardA.getName().equalsIgnoreCase("Knight") && cardB.getCardType().equalsIgnoreCase("spell") && cardB.getElementType().equalsIgnoreCase("Water")) return cardB;
+        if (cardA.getName().equalsIgnoreCase("Knight") && cardB.getCardType().equalsIgnoreCase("spell") && cardB.getElementType().equalsIgnoreCase("Water"))
+            return cardB;
         if (cardA.getName().equalsIgnoreCase("Kraken") && cardB.getCardType().equalsIgnoreCase("spell")) return cardA;
         if (cardA.getName().equalsIgnoreCase("FireElf") && cardB.getName().equalsIgnoreCase("Dragon")) return cardA;
         // If no special rule gives a definite winner, it defaults to a draw

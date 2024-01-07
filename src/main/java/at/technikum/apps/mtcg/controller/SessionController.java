@@ -2,7 +2,6 @@ package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.TokenRequest;
 import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;

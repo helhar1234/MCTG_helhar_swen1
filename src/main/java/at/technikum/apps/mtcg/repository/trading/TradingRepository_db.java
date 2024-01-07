@@ -1,8 +1,7 @@
-package at.technikum.apps.mtcg.repository;
+package at.technikum.apps.mtcg.repository.trading;
 
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.TradeRequest;
-import at.technikum.apps.mtcg.entity.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,15 +11,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class TradingRepository_db implements TradingRepository{
+public class TradingRepository_db implements TradingRepository {
+    // DB CONNECTION
     private final Database database = new Database();
 
+    // SQL STATEMENTS
     private final String FIND_TRADE_BY_ID_SQL = "SELECT * from trades WHERE trade_id = ?";
     private final String SAVE_TRADE_SQL = "INSERT INTO trades (trade_id, user_fk, card_fk, expectedType, expectedDamage) VALUES (?,?,?,?,?)";
     private final String SHOW_ALL_TRADES_SQL = "SELECT * FROM trades";
     private final String CHECK_TRADE_OF_USER_SQL = "SELECT COUNT(*) FROM trades WHERE trade_id = ? AND user_fk = ?";
     private final String DELETE_TRADE_SQL = "DELETE FROM trades WHERE trade_id = ?";
 
+    // IMPLEMENTATIONS
     @Override
     public Optional<TradeRequest> getTradeById(String id) {
         try (Connection connection = database.getConnection();

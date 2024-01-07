@@ -1,8 +1,6 @@
-package at.technikum.apps.mtcg.repository;
+package at.technikum.apps.mtcg.repository.battle;
 
 import at.technikum.apps.mtcg.entity.BattleResult;
-import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.service.BattleLogic;
 
 import java.util.Optional;
 

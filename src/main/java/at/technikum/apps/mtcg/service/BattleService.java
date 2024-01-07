@@ -2,10 +2,13 @@ package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.repository.*;
+import at.technikum.apps.mtcg.repository.battle.BattleRepository;
+import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class BattleService {
@@ -64,7 +67,7 @@ public class BattleService {
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 60000) { // Wait up to 1 minute
             Optional<BattleResult> updatedBattle = battleRepository.findBattleById(battleId);
-            if (updatedBattle.isPresent() && updatedBattle.get().getStatus().equals( "completed")) {
+            if (updatedBattle.isPresent() && updatedBattle.get().getStatus().equals("completed")) {
                 return updatedBattle.get();
             }
         }

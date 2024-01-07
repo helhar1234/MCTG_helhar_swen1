@@ -1,10 +1,11 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.repository.CardRepository;
-import at.technikum.apps.mtcg.repository.CardRepository_db;
+import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 
 import java.util.Optional;
+
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class CardService {
     private final CardRepository cardRepository;
@@ -21,29 +22,10 @@ public class CardService {
         return cardRepository.getUserCards(userId);
     }
 
-    public Card[] getUserDeckCards(String userId) {
-        return cardRepository.getUserDeckCards(userId);
-    }
 
     public boolean isCardInStack(String userId, String cardId) {
         return cardRepository.isCardInStack(userId, cardId);
     }
 
-    public boolean addCardToDeck(String userId, String cardId) {
-        return cardRepository.addCardToDeck(userId, cardId);
-    }
-
-    public boolean resetDeck(String userId) {
-        return cardRepository.resetDeck(userId);
-    }
-
-    public boolean isCardInDeck(String userId, String cardId) {
-        return cardRepository.isCardInDeck(userId, cardId);
-    }
-
-    public boolean hasDeckSet(String userId) {
-        Card[] deckCards = cardRepository.getUserDeckCards(userId);
-        return deckCards != null && deckCards.length == 4;
-    }
 
 }

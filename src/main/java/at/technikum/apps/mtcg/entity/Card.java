@@ -7,9 +7,10 @@ public class Card {
     private String elementType;
     private String cardType;
 
-    public Card(){}
+    public Card() {
+    }
 
-    Card(String id, String name, int damage, String elementType, String cardType){
+    Card(String id, String name, int damage, String elementType, String cardType) {
         this.id = id;
         this.name = name;
         this.damage = damage;

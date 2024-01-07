@@ -3,7 +3,12 @@ package at.technikum.apps.mtcg.service;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.TradeRequest;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.repository.*;
+import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.apps.mtcg.repository.card.CardRepository_db;
+import at.technikum.apps.mtcg.repository.trading.TradingRepository;
+import at.technikum.apps.mtcg.repository.trading.TradingRepository_db;
+import at.technikum.apps.mtcg.repository.user.UserRepository;
+import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
 import java.util.Optional;
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
@@ -24,7 +29,7 @@ public class TradingService {
     }
 
     public boolean createTrade(TradeRequest tradeRequest, String userId) {
-        if (tradingRepository.getTradeById(tradeRequest.getId()).isPresent()){
+        if (tradingRepository.getTradeById(tradeRequest.getId()).isPresent()) {
             return false;
         }
         return tradingRepository.createTrade(tradeRequest, userId);

@@ -5,9 +5,10 @@ public class PackageCard {
     private String name;
     private int damage;
 
-    PackageCard(){}
+    PackageCard() {
+    }
 
-    PackageCard(String id, String name, int damage){
+    PackageCard(String id, String name, int damage) {
         this.id = id;
         this.name = name;
         this.damage = damage;

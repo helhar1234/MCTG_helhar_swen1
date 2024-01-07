@@ -1,11 +1,8 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.TradeRequest;
-import at.technikum.apps.mtcg.service.CardService;
-import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.TradingService;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.service.UserService;
+import at.technikum.apps.mtcg.service.*;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -51,6 +48,7 @@ public class TradingController extends Controller {
     private final CardService cardService;
     private final SessionService sessionService;
     private final UserService userService;
+    private final DeckService deckService;
 
 
     public TradingController() {
@@ -58,6 +56,7 @@ public class TradingController extends Controller {
         this.cardService = new CardService();
         this.sessionService = new SessionService();
         this.userService = new UserService();
+        this.deckService = new DeckService();
     }
 
     public Response executeTrade(Request request, String tradingId) {
@@ -74,7 +73,7 @@ public class TradingController extends Controller {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
             }
 
-            Optional<User> user = userService.getUserByToken(token);
+            Optional<User> user = sessionService.getUserByToken(token);
             if (!user.isPresent()) {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
             }
@@ -88,7 +87,7 @@ public class TradingController extends Controller {
             JsonNode jsonNode = objectMapper.readTree(request.getBody());
             String offeredCardId = jsonNode.asText();
 
-            if (!cardService.isCardInStack(user.get().getId(), offeredCardId) || cardService.isCardInDeck(user.get().getId(), offeredCardId)) {
+            if (!cardService.isCardInStack(user.get().getId(), offeredCardId) || deckService.isCardInDeck(user.get().getId(), offeredCardId)) {
                 return new Response(HttpStatus.FORBIDDEN, HttpContentType.TEXT_PLAIN, "Forbidden: The offered card is not owned by the user or is locked in the deck");
             }
 
@@ -124,7 +123,7 @@ public class TradingController extends Controller {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
             }
 
-            Optional<User> user = userService.getUserByToken(token);
+            Optional<User> user = sessionService.getUserByToken(token);
             if (!user.isPresent()) {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
             }
@@ -163,7 +162,7 @@ public class TradingController extends Controller {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
             }
 
-            Optional<User> user = userService.getUserByToken(token);
+            Optional<User> user = sessionService.getUserByToken(token);
             if (!user.isPresent()) {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
             }
@@ -174,7 +173,7 @@ public class TradingController extends Controller {
 
 
             // Verify the card belongs to the user
-            if (!cardService.isCardInStack(user.get().getId(), tradeRequest.getCardToTrade()) || cardService.isCardInDeck(tradeRequest.getCardToTrade(), user.get().getId())) {
+            if (!cardService.isCardInStack(user.get().getId(), tradeRequest.getCardToTrade()) || deckService.isCardInDeck(tradeRequest.getCardToTrade(), user.get().getId())) {
                 return new Response(HttpStatus.FORBIDDEN, HttpContentType.TEXT_PLAIN, "Forbidden: The deal contains a card that is not owned by the user or locked in the deck.");
             }
 
@@ -207,7 +206,7 @@ public class TradingController extends Controller {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
             }
 
-           TradeRequest[] trades = tradingService.getAllTrades();
+            TradeRequest[] trades = tradingService.getAllTrades();
             if (trades == null || trades.length == 0) {
                 return new Response(HttpStatus.NO_CONTENT, HttpContentType.TEXT_PLAIN, "The request was fine, but there are no trading deals available");
             }

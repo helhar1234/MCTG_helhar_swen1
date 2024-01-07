@@ -2,7 +2,10 @@ package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.service.*;
+import at.technikum.apps.mtcg.service.BattleService;
+import at.technikum.apps.mtcg.service.DeckService;
+import at.technikum.apps.mtcg.service.SessionService;
+import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -10,10 +13,6 @@ import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
 public class BattleController extends Controller {
@@ -37,13 +36,13 @@ public class BattleController extends Controller {
     private final SessionService sessionService;
     private final UserService userService;
     private final BattleService battleService;
-    private final CardService cardService;
+    private final DeckService deckService;
 
     public BattleController() {
         this.sessionService = new SessionService();
         this.userService = new UserService();
         this.battleService = new BattleService();
-        this.cardService = new CardService();
+        this.deckService = new DeckService();
     }
 
     private Response battle(Request request) {
@@ -61,21 +60,21 @@ public class BattleController extends Controller {
                 return unauthorizedResponse("Invalid token");
             }
 
-            Optional<User> playerOpt = userService.getUserByToken(token);
+            Optional<User> playerOpt = sessionService.getUserByToken(token);
             if (playerOpt.isEmpty()) {
                 return unauthorizedResponse("User does not exist");
             }
             User player = playerOpt.get();
 
             // Check if the player has a deck set up
-            if (!cardService.hasDeckSet(player.getId())) {
-                return conflictResponse("Player "+player.getUsername()+" has no deck set up");
+            if (!deckService.hasDeckSet(player.getId())) {
+                return conflictResponse("Player " + player.getUsername() + " has no deck set up");
             }
 
             // Block and wait for the battle result (not recommended in real applications)
             // Führe den Kampf synchron aus
-             BattleResult battleResult = battleService.battle(player);
-            if (battleResult == null){
+            BattleResult battleResult = battleService.battle(player);
+            if (battleResult == null) {
                 return internalServerErrorResponse("Battle Could not be started");
             }
 
