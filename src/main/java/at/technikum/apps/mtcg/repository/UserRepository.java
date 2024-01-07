@@ -32,4 +32,8 @@ public interface UserRepository {
     Optional<User> findUserById(String id);
 
     boolean updateELO(String userId, int eloToAdd);
+
+    int getUserWins(String id);
+
+    int getUserBattles(String id);
 }

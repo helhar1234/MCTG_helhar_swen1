@@ -45,4 +45,12 @@ public class UserService {
     public UserStats[] getScoreboard() {
         return userRepository.getScoreboard();
     }
+
+    public int getUserWins(String id) {
+        return userRepository.getUserWins(id);
+    }
+
+    public int getUserBattles(String id) {
+        return userRepository.getUserBattles(id);
+    }
 }

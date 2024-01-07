@@ -205,10 +205,23 @@ public class UserController extends Controller {
                 return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
             }
 
-            // Respond with the ELO rating of the user
+            int wins = userService.getUserWins(user.get().getId());
+            int battles = userService.getUserBattles(user.get().getId());
+
+// Create a map with the user stats
+            Map<String, Object> userStats = Map.of(
+                    "eloRating", user.get().getEloRating(),
+                    "wins", wins,
+                    "totalBattles", battles
+            );
+
+// Serialize the map to JSON
             ObjectMapper objectMapper = new ObjectMapper();
-            String userStatsJson = objectMapper.writeValueAsString(Map.of("eloRating", user.get().getEloRating()));
+            String userStatsJson = objectMapper.writeValueAsString(userStats);
+
+// Return the response
             return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userStatsJson);
+
 
         } catch (Exception e) {
             System.out.println("Error retrieving user stats: " + e.getMessage());

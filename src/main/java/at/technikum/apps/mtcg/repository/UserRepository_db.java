@@ -30,6 +30,8 @@ public class UserRepository_db implements UserRepository{
     private final String UPDATE_ELO_SQL = "UPDATE users SET elorating = elorating + ? WHERE user_id = ?";
     private final String ADD_CARD_TO_USER_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
     private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users ORDER BY elorating DESC";
+    private final String GET_WINS_SQL = "SELECT COUNT(*) AS wins FROM battles WHERE winner_fk = ?";
+    private final String GET_BATTLES_SQL = "SELECT COUNT(*) AS battles FROM battles WHERE player_a_fk = ? OR player_b_fk = ?";
     @Override
     public boolean saveUser(User user) {
         boolean success = false;
@@ -348,6 +350,41 @@ public class UserRepository_db implements UserRepository{
             // You might want to handle specific SQL exceptions based on your business logic
         }
         return success;
+    }
+
+    @Override
+    public int getUserWins(String id) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_WINS_SQL)) {
+
+            statement.setString(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("wins");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return 0;
+    }
+
+    @Override
+    public int getUserBattles(String id) {
+        try (Connection connection = database.getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_BATTLES_SQL)) {
+
+            statement.setString(1, id);
+            statement.setString(2, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("battles");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return 0;
     }
 
 
