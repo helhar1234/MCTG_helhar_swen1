@@ -120,7 +120,7 @@ group #green User Stats and Scoreboard
     end
 end
 
-group Battle Engagement
+group #green Battle Engagement
     Client -> Server: POST /battles (Start Battle)
     alt Battle carried out
         Server --> Client: 200 (Battle Log)

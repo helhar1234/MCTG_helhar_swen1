@@ -27,6 +27,7 @@ public class UserRepository_db implements UserRepository{
     private final String SAVE_USERDATA_SQL = "INSERT INTO userdata (user_fk, name) VALUES (?, ?)";
     private final String FIND_USER_BY_TOKEN_SQL = "SELECT u.* FROM users u INNER JOIN access_token at ON u.user_id = at.user_fk WHERE at.token_name = ?";
     private final String UPDATE_COINS_SQL = "UPDATE users SET coins = coins + ? WHERE user_id = ? AND coins + ? >= 0";
+    private final String UPDATE_ELO_SQL = "UPDATE users SET elorating = elorating + ? WHERE user_id = ?";
     private final String ADD_CARD_TO_USER_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
     private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users ORDER BY elorating DESC";
     @Override
@@ -326,6 +327,27 @@ public class UserRepository_db implements UserRepository{
             System.out.println("Database connection error: " + e.getMessage());
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
+    }
+
+    @Override
+    public boolean updateELO(String userId, int eloToAdd) {
+        boolean success = false;
+        try (Connection connection = database.getConnection();
+             PreparedStatement updateELOStmt = connection.prepareStatement(UPDATE_ELO_SQL)) {
+
+            updateELOStmt.setInt(1, eloToAdd);
+            updateELOStmt.setString(2, userId);
+
+            // Execute the update statement
+            int affectedRows = updateELOStmt.executeUpdate();
+
+            // Check if the update was successful
+            success = affectedRows == 1;
+        } catch (SQLException e) {
+            System.out.println("Error updating elo: " + e.getMessage());
+            // You might want to handle specific SQL exceptions based on your business logic
+        }
+        return success;
     }
 
 

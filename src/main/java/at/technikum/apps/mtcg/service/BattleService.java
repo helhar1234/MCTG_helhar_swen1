@@ -25,7 +25,9 @@ public class BattleService {
         // If there is an open battle, join it
         if (openBattle.isPresent()) {
             BattleResult battle = openBattle.get();
-            return battleLogic.performBattle(battle.getId(), battle.getPlayerA(), player);
+            battle.setPlayerB(player); // Set player as Player B
+            battlesWaiting.put(battle.getId(), battle); // Update the waiting battle
+            return waitForBattleCompletion(battle.getId());
         } else {
             // Create a new battle if none are open
             String battleId = UUID.randomUUID().toString();
@@ -36,7 +38,7 @@ public class BattleService {
             long startTime = System.currentTimeMillis();
             while (System.currentTimeMillis() - startTime < 60000) { // 1 minute wait time
                 BattleResult updatedBattle = battlesWaiting.get(battleId);
-                if (updatedBattle != null && updatedBattle.getPlayerB() != null) {
+                if (updatedBattle.getPlayerB() != null) {
                     // If another player joined, start the battle
                     return battleLogic.performBattle(battleId, player, updatedBattle.getPlayerB());
                 }
@@ -55,6 +57,17 @@ public class BattleService {
             }
         }
         return Optional.empty();
+    }
+
+    private BattleResult waitForBattleCompletion(String battleId) {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < 60000) { // Wait up to 1 minute
+            Optional<BattleResult> updatedBattle = battleRepository.findBattleById(battleId);
+            if (updatedBattle.isPresent() && updatedBattle.get().getStatus().equals( "completed")) {
+                return updatedBattle.get();
+            }
+        }
+        return null; // Return null if the battle does not complete in time
     }
 }
 

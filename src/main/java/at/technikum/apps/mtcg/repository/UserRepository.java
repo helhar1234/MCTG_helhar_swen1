@@ -30,4 +30,6 @@ public interface UserRepository {
     boolean deleteToken(String userId);
 
     Optional<User> findUserById(String id);
+
+    boolean updateELO(String userId, int eloToAdd);
 }

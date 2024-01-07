@@ -68,12 +68,15 @@ public class BattleController extends Controller {
 
             // Check if the player has a deck set up
             if (!cardService.hasDeckSet(player.getId())) {
-                return conflictResponse("Player has no deck set up");
+                return conflictResponse("Player "+player.getUsername()+" has no deck set up");
             }
 
             // Block and wait for the battle result (not recommended in real applications)
             // Führe den Kampf synchron aus
              BattleResult battleResult = battleService.battle(player);
+            if (battleResult == null){
+                return internalServerErrorResponse("Battle Could not be started");
+            }
 
             ObjectMapper objectMapper = new ObjectMapper();
             String responseBody = objectMapper.writeValueAsString(battleResult);

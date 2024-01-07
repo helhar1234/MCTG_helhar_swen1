@@ -14,8 +14,11 @@ public class BattleRepository_db implements BattleRepository{
     private final Database database = new Database();
 
     private final String START_BATTLE_SQL = "INSERT INTO battles (battle_id, player_a_fk, player_b_fk, start_time, status) VALUES (?,?,?,CURRENT_TIMESTAMP,'active')";
+    private final String FIND_BATTLE_BY_ID_SQL = "SELECT battles.*, userA.user_id AS userA_id, userA.username AS userA_username, userA.password AS userA_password, userA.coins AS userA_coins, userA.eloRating AS userA_eloRating, userA.isAdmin AS userA_isAdmin, userB.user_id AS userB_id, userB.username AS userB_username, userB.password AS userB_password, userB.coins AS userB_coins, userB.eloRating AS userB_eloRating, userB.isAdmin AS userB_isAdmin, log_entry FROM battles LEFT JOIN users AS userA ON battles.player_a_fk = userA.user_id LEFT JOIN users AS userB ON battles.player_b_fk = userB.user_id LEFT JOIN battle_logs ON battles.battle_id = battle_logs.battle_fk WHERE battles.battle_id = ?";
+    private final String START_LOG_SQL = "INSERT INTO battle_logs (battle_fk, log_entry) VALUES (?,?)";
+    private final String ADD_TO_LOG_SQL = "UPDATE battle_logs SET log_entry = CONCAT(log_entry, ?) WHERE battle_fk = ?";
 
-    private final String FIND_BATTLE_BY_ID_SQL = "SELECT battles.*, userA.user_id AS userA_id, userA.username AS userA_username, userA.password AS userA_password, userA.coins AS userA_coins, userA.eloRating AS userA_eloRating, userA.isAdmin AS userA_isAdmin, userB.user_id AS userB_id, userB.username AS userB_username, userB.password AS userB_password, userB.coins AS userB_coins, userB.eloRating AS userB_eloRating, userB.isAdmin AS userB_isAdmin\n FROM battles LEFT JOIN users AS userA ON battles.player_a_fk = userA.user_id LEFT JOIN users AS userB ON battles.player_b_fk = userB.user_id WHERE battles.battle_id = ?";
+    private final String END_BATTLE_SQL = "UPDATE battles SET winner_fk = ?, status = 'completed' WHERE battle_id = ?";
 
 
     @Override
@@ -60,7 +63,7 @@ public class BattleRepository_db implements BattleRepository{
                             resultSet.getString("status"),
                             winner,
                             resultSet.getTimestamp("start_time"),
-                            "battleLog"
+                            resultSet.getString("log_entry")
                     );
                     return Optional.of(battle);
                 }
@@ -92,6 +95,87 @@ public class BattleRepository_db implements BattleRepository{
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during battle creation: " + e.getMessage());
+            }
+            connection.setAutoCommit(true); // Reset auto-commit to default
+        } catch (SQLException e) {
+            System.out.println("Database connection error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public boolean startLog(String battleId, String text) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
+
+            // Insert into users
+            try (PreparedStatement logCreateStatement = connection.prepareStatement(START_LOG_SQL, Statement.RETURN_GENERATED_KEYS)) {
+                logCreateStatement.setString(1, battleId);
+                logCreateStatement.setString(2, text);
+                int logAffectedRows = logCreateStatement.executeUpdate();
+
+                // Retrieve the generated key (user id)
+                if (logAffectedRows == 1) {
+                    connection.commit();
+                    return true;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during Log creation: " + e.getMessage());
+            }
+            connection.setAutoCommit(true); // Reset auto-commit to default
+        } catch (SQLException e) {
+            System.out.println("Database connection error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public boolean addToLog(String battleId, String text) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
+
+            // Insert into users
+            try (PreparedStatement logCreateStatement = connection.prepareStatement(ADD_TO_LOG_SQL, Statement.RETURN_GENERATED_KEYS)) {
+                logCreateStatement.setString(1, text);
+                logCreateStatement.setString(2, battleId);
+                int logAffectedRows = logCreateStatement.executeUpdate();
+
+                // Retrieve the generated key (user id)
+                if (logAffectedRows == 1) {
+                    connection.commit();
+                    return true;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during Log addition: " + e.getMessage());
+            }
+            connection.setAutoCommit(true); // Reset auto-commit to default
+        } catch (SQLException e) {
+            System.out.println("Database connection error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public boolean crownWinner(String battleId, String userId) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
+
+            // Insert into users
+            try (PreparedStatement logCreateStatement = connection.prepareStatement(END_BATTLE_SQL, Statement.RETURN_GENERATED_KEYS)) {
+                logCreateStatement.setString(1, userId);
+                logCreateStatement.setString(2, battleId);
+                int logAffectedRows = logCreateStatement.executeUpdate();
+
+                // Retrieve the generated key (user id)
+                if (logAffectedRows == 1) {
+                    connection.commit();
+                    return true;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during Log addition: " + e.getMessage());
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
