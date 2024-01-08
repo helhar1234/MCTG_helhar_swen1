@@ -5,6 +5,7 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
 
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,13 +17,13 @@ public class BattleService {
     private final BattleLogic battleLogic;
     private final ConcurrentHashMap<String, BattleResult> battlesWaiting;
 
-    public BattleService() {
-        this.battleRepository = new BattleRepository_db();
-        this.battleLogic = new BattleLogic();
-        this.battlesWaiting = new ConcurrentHashMap<>();
+    public BattleService(BattleRepository battleRepository, BattleLogic battleLogic, ConcurrentHashMap<String, BattleResult> battlesWaiting) {
+        this.battleRepository = battleRepository;
+        this.battleLogic = battleLogic;
+        this.battlesWaiting = battlesWaiting;
     }
 
-    public BattleResult battle(User player) {
+    public BattleResult battle(User player) throws SQLException {
         // Find an open battle
         Optional<BattleResult> openBattle = findOpenBattle();
 
@@ -40,7 +41,7 @@ public class BattleService {
 
             // Wait for another player to join or timeout
             long startTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() - startTime < 60000) { // 1 minute wait time
+            while (System.currentTimeMillis() - startTime < 2000) { // 20s wait time
                 BattleResult updatedBattle = battlesWaiting.get(battleId);
                 if (updatedBattle.getPlayerB() != null) {
                     // If another player joined, start the battle
@@ -63,10 +64,11 @@ public class BattleService {
         return Optional.empty();
     }
 
-    private BattleResult waitForBattleCompletion(String battleId) {
+    private BattleResult waitForBattleCompletion(String battleId) throws SQLException {
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 60000) { // Wait up to 1 minute
-            Optional<BattleResult> updatedBattle = battleRepository.findBattleById(battleId);
+            Optional<BattleResult> updatedBattle = null;
+            updatedBattle = battleRepository.findBattleById(battleId);
             if (updatedBattle.isPresent() && updatedBattle.get().getStatus().equals("completed")) {
                 return updatedBattle.get();
             }

@@ -84,6 +84,7 @@ public class Request {
     public Map<String, String> getHeaders() {
         return headers;
     }
+
     public String getAuthenticationHeader() {
         return getHeader("Authorization");
     }

@@ -10,7 +10,9 @@ public class Response {
 
     private String body;
 
-    public Response(){}
+    public Response() {
+    }
+
     public Response(HttpStatus httpStatus, HttpContentType httpContentType, String body) {
         this.statusCode = httpStatus.getCode();
         this.statusMessage = httpStatus.getMessage();

@@ -12,9 +12,12 @@ import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.sql.SQLException;
 import java.util.Optional;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
+// TODO: ADD ELO Abfrage
+// TODO: ADD game feature
 public class BattleController extends Controller {
     @Override
     public boolean supports(String route) {
@@ -38,11 +41,11 @@ public class BattleController extends Controller {
     private final BattleService battleService;
     private final DeckService deckService;
 
-    public BattleController() {
-        this.sessionService = new SessionService();
-        this.userService = new UserService();
-        this.battleService = new BattleService();
-        this.deckService = new DeckService();
+    public BattleController(BattleService battleService, SessionService sessionService, UserService userService, DeckService deckService) {
+        this.sessionService = sessionService;
+        this.userService = userService;
+        this.battleService = battleService;
+        this.deckService = deckService;
     }
 
     private Response battle(Request request) {
@@ -71,9 +74,12 @@ public class BattleController extends Controller {
                 return conflictResponse("Player " + player.getUsername() + " has no deck set up");
             }
 
-            // Block and wait for the battle result (not recommended in real applications)
-            // Führe den Kampf synchron aus
-            BattleResult battleResult = battleService.battle(player);
+            BattleResult battleResult = null;
+            try {
+                battleResult = battleService.battle(player);
+            } catch (SQLException e) {
+                return internalServerErrorResponse("Error occurred during battle");
+            }
             if (battleResult == null) {
                 return internalServerErrorResponse("Battle Could not be started");
             }

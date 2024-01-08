@@ -10,10 +10,15 @@ import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
+// TODO: MAKE DECK INTO OBJECT AND ADD TO DB AT END OF GAME -> less db abfragen
+// TODO: ADD MORE LOGGING
+// TODO: additional feature -> winner kriegt eine komplett neue karte
+// FAQ: CAN GAME BE DRAW? -> unit test for all cases
 public class BattleLogic {
     private final BattleRepository battleRepository;
     private final UserRepository userRepository;
@@ -30,7 +35,7 @@ public class BattleLogic {
         this.cardRepository = new CardRepository_db();
     }
 
-    public BattleResult performBattle(String battleId, User playerA, User playerB) {
+    public BattleResult performBattle(String battleId, User playerA, User playerB) throws SQLException {
         boolean started = battleRepository.startBattle(battleId, playerA.getId(), playerB.getId());
         if (!started) {
             // Handle the case where the battle cannot be started.

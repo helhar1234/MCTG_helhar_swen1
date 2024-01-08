@@ -7,6 +7,7 @@ import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository_db;
 
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,12 +17,12 @@ public class PackageService {
     private final CardRepository cardRepository;
     private final PackageRepository packageRepository;
 
-    public PackageService() {
-        this.cardRepository = new CardRepository_db();
-        this.packageRepository = new PackageRepository_db();
+    public PackageService(CardRepository cardRepository, PackageRepository packageRepository) {
+        this.cardRepository = cardRepository;
+        this.packageRepository = packageRepository;
     }
 
-    public boolean savePackage(PackageCard[] packageCards) {
+    public boolean savePackage(PackageCard[] packageCards) throws SQLException {
         // Generate a new package ID
         String packageId = UUID.randomUUID().toString();
 

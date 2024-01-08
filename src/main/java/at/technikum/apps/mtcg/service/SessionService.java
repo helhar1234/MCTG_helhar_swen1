@@ -15,9 +15,9 @@ public class SessionService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
 
-    public SessionService() {
-        this.userRepository = new UserRepository_db();
-        this.sessionRepository = new SessionRepository_db();
+    public SessionService(UserRepository userRepository, SessionRepository sessionRepository) {
+        this.userRepository = userRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     public Optional<String> getToken(TokenRequest tokenRequest) {

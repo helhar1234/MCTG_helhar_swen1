@@ -15,54 +15,69 @@ public class MtcgApp implements ServerApplication {
     private List<Controller> controllers = new ArrayList<>();
 
     public MtcgApp() {
-        controllers.add(new UserController());
-        controllers.add(new CardController());
-        controllers.add(new SessionController());
-        controllers.add(new PackageController());
-        controllers.add(new TradingController());
-        controllers.add(new BattleController());
-        controllers.add(new StatsController());
-        controllers.add(new ScoreboardController());
-        controllers.add(new TransactionsController());
-        controllers.add(new DeckController());
+        Injector injector = new Injector();
+        this.controllers = injector.createController();
     }
 
     @Override
     public Response handle(Request request) {
-        Controller selectedController = null;
+        try {
+            // Extrahiert den ersten Teil des Pfades vor dem ersten '/' oder '?'
+            String route = request.getRoute().split("[/?]")[1];
+            Controller selectedController = null;
 
-        // Überprüfen Sie auf spezifische Routen
-        if (request.getRoute().startsWith("/users")) {
-            selectedController = getController(UserController.class);
-        } else if (request.getRoute().startsWith("/stats")) {
-            selectedController = getController(StatsController.class);
-        } else if (request.getRoute().startsWith("/scoreboard")) {
-            selectedController = getController(ScoreboardController.class);
-        } else if (request.getRoute().startsWith("/cards")) {
-            selectedController = getController(CardController.class);
-        } else if (request.getRoute().startsWith("/deck")) {
-            selectedController = getController(DeckController.class);
-        } else if (request.getRoute().startsWith("/sessions")) {
-            selectedController = getController(SessionController.class);
-        } else if (request.getRoute().startsWith("/packages")) {
-            selectedController = getController(PackageController.class);
-        } else if (request.getRoute().startsWith("/transactions/packages")) {
-            selectedController = getController(TransactionsController.class);
-        } else if (request.getRoute().startsWith("/battles")) {
-            selectedController = getController(BattleController.class);
-        } else if (request.getRoute().startsWith("/tradings")) {
-            selectedController = getController(TradingController.class);
+            switch (route) {
+                case "users":
+                    selectedController = getController(UserController.class);
+                    break;
+                case "stats":
+                    selectedController = getController(StatsController.class);
+                    break;
+                case "scoreboard":
+                    selectedController = getController(ScoreboardController.class);
+                    break;
+                case "cards":
+                    selectedController = getController(CardController.class);
+                    break;
+                case "deck":
+                    selectedController = getController(DeckController.class);
+                    break;
+                case "sessions":
+                    selectedController = getController(SessionController.class);
+                    break;
+                case "packages":
+                    selectedController = getController(PackageController.class);
+                    break;
+                case "transactions":
+                    // Spezialfall für transactions/packages
+                    if (request.getRoute().startsWith("/transactions/packages")) {
+                        selectedController = getController(TransactionsController.class);
+                    }
+                    break;
+                case "battles":
+                    selectedController = getController(BattleController.class);
+                    break;
+                case "tradings":
+                    selectedController = getController(TradingController.class);
+                    break;
+                /*case "wheel":
+                    selectedController = getController(WheelOfFortuneController.class);
+                    break;*/
+                default:
+                    // Kein passender Controller gefunden
+                    break;
+            }
+
+            if (selectedController != null && selectedController.supports(request.getRoute())) {
+                return selectedController.handle(request);
+            } else {
+                return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "Route " + request.getRoute() + " not found in app!");
+            }
+        } catch (Exception e) {
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal Server Error: " + e.getMessage());
         }
-        // Verwenden Sie den ausgewählten Controller, falls vorhanden
-        if (selectedController != null && selectedController.supports(request.getRoute())) {
-
-            return selectedController.handle(request);
-        }
-
-        return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "Route " + request.getRoute() + " not found in app!");
     }
 
-    // Hilfsmethode, um den Controller einer bestimmten Klasse zu erhalten
     private <T extends Controller> T getController(Class<T> controllerClass) {
         for (Controller controller : controllers) {
             if (controllerClass.isInstance(controller)) {

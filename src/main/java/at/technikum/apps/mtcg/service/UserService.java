@@ -14,11 +14,6 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository userRepository;
 
-    public UserService() {
-        this.userRepository = new UserRepository_db();
-    }
-
-    // FOR TESTING
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }

@@ -51,12 +51,12 @@ public class TradingController extends Controller {
     private final DeckService deckService;
 
 
-    public TradingController() {
-        this.tradingService = new TradingService();
-        this.cardService = new CardService();
-        this.sessionService = new SessionService();
-        this.userService = new UserService();
-        this.deckService = new DeckService();
+    public TradingController(TradingService tradingService, SessionService sessionService, CardService cardService, UserService userService, DeckService deckService) {
+        this.tradingService = tradingService;
+        this.sessionService = sessionService;
+        this.cardService = cardService;
+        this.userService = userService;
+        this.deckService = deckService;
     }
 
     public Response executeTrade(Request request, String tradingId) {

@@ -31,7 +31,7 @@ public class CardRepository_db implements CardRepository {
     // IMPLEMENTATIONS
 
     @Override
-    public boolean saveCard(PackageCard card) {
+    public boolean saveCard(PackageCard card) throws SQLException {
         boolean success = false;
 
         // Determine elementtype based on card name
@@ -67,12 +67,13 @@ public class CardRepository_db implements CardRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error during card save: " + e.getMessage());
+            throw new SQLException(e);
         }
         return success;
     }
 
     @Override
-    public Optional<Card> findCardById(String id) {
+    public Optional<Card> findCardById(String id) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_CARD_BY_ID_SQL)) {
 
@@ -87,14 +88,14 @@ public class CardRepository_db implements CardRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error finding card by ID: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            throw new SQLException(e);
         }
         return Optional.empty();
     }
 
 
     @Override
-    public Card[] getUserCards(String userId) {
+    public Card[] getUserCards(String userId) throws SQLException {
         List<Card> cards = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -110,14 +111,14 @@ public class CardRepository_db implements CardRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error finding cards of user: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            throw new SQLException(e);
         }
 
         return cards.toArray(new Card[0]);
     }
 
     @Override
-    public Card[] getUserDeckCards(String userId) {
+    public Card[] getUserDeckCards(String userId) throws SQLException {
         List<Card> cards = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -133,14 +134,14 @@ public class CardRepository_db implements CardRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error finding cards of user: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            throw new SQLException(e);
         }
 
         return cards.toArray(new Card[0]);
     }
 
     @Override
-    public boolean isCardInStack(String userId, String cardId) {
+    public boolean isCardInStack(String userId, String cardId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(CHECK_CARD_IN_STACK_SQL)) {
 
@@ -154,13 +155,13 @@ public class CardRepository_db implements CardRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error checking if card is in stack: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            throw new SQLException(e);
         }
         return false;
     }
 
     @Override
-    public boolean addCardToDeck(String userId, String cardId) {
+    public boolean addCardToDeck(String userId, String cardId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement connectStmt = connection.prepareStatement(ADD_CARDS_TO_DECK_SQL)) {
 
@@ -175,12 +176,12 @@ public class CardRepository_db implements CardRepository {
             return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println("Error connecting card to deck: " + e.getMessage());
-            return false;
+            throw new SQLException(e);
         }
     }
 
     @Override
-    public boolean resetDeck(String userId) {
+    public boolean resetDeck(String userId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(RESET_USER_DECK_SQL)) {
 
@@ -194,14 +195,13 @@ public class CardRepository_db implements CardRepository {
             return affectedRows >= 0;
         } catch (SQLException e) {
             System.out.println("Error resetting user's deck: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
-            return false;
+            throw new SQLException(e);
         }
     }
 
 
     @Override
-    public boolean isCardInDeck(String userId, String cardId) {
+    public boolean isCardInDeck(String userId, String cardId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(CHECK_CARD_IN_DECK_SQL)) {
 
@@ -216,13 +216,13 @@ public class CardRepository_db implements CardRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error checking if card is in stack: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            throw new SQLException(e);
         }
         return false;
     }
 
     @Override
-    public boolean deleteCardFromStack(String userId, String cardId) {
+    public boolean deleteCardFromStack(String userId, String cardId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement deleteStmt = connection.prepareStatement(DELETE_CARD_FROM_STACK_SQL)) {
 
@@ -234,12 +234,12 @@ public class CardRepository_db implements CardRepository {
             return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println("Error deleting card from user stack: " + e.getMessage());
-            return false;
+            throw new SQLException(e);
         }
     }
 
     @Override
-    public boolean addCardToStack(String userId, String cardId) {
+    public boolean addCardToStack(String userId, String cardId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement addStmt = connection.prepareStatement(ADD_CARD_TO_STACK_SQL)) {
 
@@ -251,14 +251,12 @@ public class CardRepository_db implements CardRepository {
             return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println("Error saving card to user stack: " + e.getMessage());
-            return false;
+            throw new SQLException(e);
         }
     }
 
 
     private Card convertResultSetToCard(ResultSet resultSet) throws SQLException {
-        // Implement this method to convert a ResultSet to a Card object
-        // Extract values from the resultSet and populate a new Card object
         Card card = new Card();
         card.setId(resultSet.getString("card_id"));
         card.setName(resultSet.getString("name"));

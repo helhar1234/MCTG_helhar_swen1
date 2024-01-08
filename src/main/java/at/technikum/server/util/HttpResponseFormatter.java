@@ -1,4 +1,3 @@
-
 package at.technikum.server.util;
 
 import at.technikum.server.http.Response;

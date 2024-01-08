@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public class DeckController extends Controller {
     public boolean supports(String route) {
-        return route.startsWith("/cards") || route.startsWith("/deck");
+        return route.startsWith("/deck");
     }
 
     @Override
@@ -44,11 +44,11 @@ public class DeckController extends Controller {
     private final DeckService deckService;
 
 
-    public DeckController() {
-        this.userService = new UserService();
-        this.sessionService = new SessionService();
-        this.cardService = new CardService();
-        this.deckService = new DeckService();
+    public DeckController( DeckService deckService, SessionService sessionService, UserService userService, CardService cardService) {
+        this.deckService = deckService;
+        this.sessionService = sessionService;
+        this.userService = userService;
+        this.cardService = cardService;
     }
 
     private Response createUserDeck(Request request) {

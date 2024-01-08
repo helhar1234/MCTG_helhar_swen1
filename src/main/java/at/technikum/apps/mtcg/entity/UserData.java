@@ -9,7 +9,7 @@ public class UserData {
 
     }
 
-    UserData(String name, String bio, String image) {
+    public UserData(String name, String bio, String image) {
         this.name = name;
         this.bio = bio;
         this.image = image;
