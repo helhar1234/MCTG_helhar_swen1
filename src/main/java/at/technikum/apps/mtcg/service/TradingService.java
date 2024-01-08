@@ -26,7 +26,7 @@ public class TradingService {
         return tradingRepository.getTradeById(id);
     }
 
-    public boolean createTrade(TradeRequest tradeRequest, String userId) throws SQLException {
+    public synchronized boolean createTrade(TradeRequest tradeRequest, String userId) throws SQLException {
         if (tradingRepository.getTradeById(tradeRequest.getId()).isPresent()) {
             return false;
         }
@@ -56,7 +56,7 @@ public class TradingService {
         return tradingRepository.isUserTrade(userId, tradingId);
     }
 
-    public boolean deleteTrade(String tradingId) throws SQLException {
+    public synchronized boolean deleteTrade(String tradingId) throws SQLException {
         return tradingRepository.deleteTrade(tradingId);
     }
 
@@ -73,7 +73,7 @@ public class TradingService {
         }
     }
 
-    public boolean trade(String userIdOfBuyer, String cardIdOfBuyer, String userIdOfSeller, String cardIdOfSeller, String tradeId) throws SQLException {
+    public synchronized boolean trade(String userIdOfBuyer, String cardIdOfBuyer, String userIdOfSeller, String cardIdOfSeller, String tradeId) throws SQLException {
         return cardRepository.deleteCardFromStack(userIdOfBuyer, cardIdOfBuyer) &&
                 cardRepository.addCardToStack(userIdOfSeller, cardIdOfBuyer) &&
                 cardRepository.deleteCardFromStack(userIdOfSeller, cardIdOfSeller) &&

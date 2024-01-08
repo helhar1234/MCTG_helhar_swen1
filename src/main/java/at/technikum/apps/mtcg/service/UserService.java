@@ -18,7 +18,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public Optional<User> createUser(User user) throws SQLException {
+    public synchronized Optional<User> createUser(User user) throws SQLException {
         user.setId(UUID.randomUUID().toString());
         user.setAdmin(Objects.equals(user.getUsername(), "admin"));
         if (userRepository.isUsernameExists(user.getUsername())) {
@@ -35,7 +35,7 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public UserData updateUserData(String username, UserData userData) throws SQLException {
+    public synchronized UserData updateUserData(String username, UserData userData) throws SQLException {
         return userRepository.updateUserData(userRepository.findByUsername(username).get().getId(), userData);
     }
 

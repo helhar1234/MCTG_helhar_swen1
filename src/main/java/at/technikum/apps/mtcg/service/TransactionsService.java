@@ -18,7 +18,7 @@ public class TransactionsService {
         this.packageRepository = packageRepository;
     }
 
-    public boolean makeTransaction(String packageId, String userId, int price) throws SQLException {
+    public synchronized boolean makeTransaction(String packageId, String userId, int price) throws SQLException {
         // Attempt to deduct the price from the user's coins
         boolean coinsUpdated = userRepository.updateCoins(userId, -price); // Assuming this method deducts coins when given a negative amount
 

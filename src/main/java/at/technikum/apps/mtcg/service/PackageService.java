@@ -20,7 +20,7 @@ public class PackageService {
         this.packageRepository = packageRepository;
     }
 
-    public boolean savePackage(PackageCard[] packageCards) throws SQLException {
+    public synchronized boolean savePackage(PackageCard[] packageCards) throws SQLException {
         // Generate a new package ID
         String packageId = UUID.randomUUID().toString();
 

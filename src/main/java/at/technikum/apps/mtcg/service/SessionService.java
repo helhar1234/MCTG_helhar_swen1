@@ -57,7 +57,7 @@ public class SessionService {
     }
 
 
-    public boolean authenticateToken(String token) throws SQLException {
+    public synchronized boolean authenticateToken(String token) throws SQLException {
         return sessionRepository.authenticateToken(token);
     }
 

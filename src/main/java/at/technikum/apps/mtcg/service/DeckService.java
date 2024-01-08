@@ -12,11 +12,11 @@ public class DeckService {
         this.cardRepository = cardRepository;
     }
 
-    public boolean addCardToDeck(String userId, String cardId) throws SQLException {
+    public synchronized boolean addCardToDeck(String userId, String cardId) throws SQLException {
         return cardRepository.addCardToDeck(userId, cardId);
     }
 
-    public boolean resetDeck(String userId) throws SQLException {
+    public synchronized boolean resetDeck(String userId) throws SQLException {
         return cardRepository.resetDeck(userId);
     }
 
