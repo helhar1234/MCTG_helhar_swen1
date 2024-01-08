@@ -7,11 +7,6 @@ import at.technikum.apps.mtcg.repository.stats.StatsRepository_db;
 public class StatsService {
     private final StatsRepository statsRepository;
 
-    public StatsService() {
-        this.statsRepository = new StatsRepository_db();
-    }
-
-    // FOR TESTING
     public StatsService(StatsRepository statsRepository) {
         this.statsRepository = statsRepository;
     }

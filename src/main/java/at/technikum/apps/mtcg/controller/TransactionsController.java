@@ -36,11 +36,11 @@ public class TransactionsController extends Controller {
     private final TransactionsService transactionsService;
     private final UserService userService;
 
-    public TransactionsController() {
-        this.packageService = new PackageService();
-        this.sessionService = new SessionService();
-        this.transactionsService = new TransactionsService();
-        this.userService = new UserService();
+    public TransactionsController(TransactionsService transactionsService, SessionService sessionService, PackageService packageService, UserService userService) {
+        this.packageService = packageService;
+        this.sessionService = sessionService;
+        this.transactionsService = transactionsService;
+        this.userService = userService;
     }
 
     private Response buyPackage(Request request) {

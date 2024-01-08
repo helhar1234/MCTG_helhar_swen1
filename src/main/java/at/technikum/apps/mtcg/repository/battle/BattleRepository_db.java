@@ -21,7 +21,7 @@ public class BattleRepository_db implements BattleRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public Optional<BattleResult> findBattleById(String battleId) {
+    public Optional<BattleResult> findBattleById(String battleId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_BATTLE_BY_ID_SQL)) {
             statement.setString(1, battleId);
@@ -69,12 +69,13 @@ public class BattleRepository_db implements BattleRepository {
             }
         } catch (SQLException e) {
             System.out.println("Error finding battle by ID: " + e.getMessage());
+            throw new SQLException(e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean startBattle(String battleId, String hostId, String opponentId) {
+    public boolean startBattle(String battleId, String hostId, String opponentId) throws SQLException {
 
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
@@ -94,16 +95,18 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during battle creation: " + e.getMessage());
+                throw new SQLException(e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException(e);
         }
         return false;
     }
 
     @Override
-    public boolean startLog(String battleId, String text) {
+    public boolean startLog(String battleId, String text) throws SQLException {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -121,16 +124,18 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log creation: " + e.getMessage());
+                throw new SQLException(e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException(e);
         }
         return false;
     }
 
     @Override
-    public boolean addToLog(String battleId, String text) {
+    public boolean addToLog(String battleId, String text) throws SQLException {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -148,16 +153,18 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log addition: " + e.getMessage());
+                throw new SQLException(e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException(e);
         }
         return false;
     }
 
     @Override
-    public boolean crownWinner(String battleId, String userId) {
+    public boolean crownWinner(String battleId, String userId) throws SQLException {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -175,10 +182,12 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log addition: " + e.getMessage());
+                throw new SQLException(e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException(e);
         }
         return false;
     }

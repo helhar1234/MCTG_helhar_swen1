@@ -18,7 +18,7 @@ import java.util.Optional;
 public class CardController extends Controller {
     @Override
     public boolean supports(String route) {
-        return route.startsWith("/cards") || route.startsWith("/deck");
+        return route.startsWith("/cards");
     }
 
     @Override
@@ -35,15 +35,14 @@ public class CardController extends Controller {
         return status(HttpStatus.BAD_REQUEST);
     }
 
-
-    private final UserService userService;
-    private final SessionService sessionService;
     private final CardService cardService;
+    private final SessionService sessionService;
+    private final UserService userService;
 
-    public CardController() {
-        this.userService = new UserService();
-        this.sessionService = new SessionService();
-        this.cardService = new CardService();
+    public CardController(CardService cardService, SessionService sessionService, UserService userService) {
+        this.cardService = cardService;
+        this.sessionService = sessionService;
+        this.userService = userService;
     }
 
     private Response getUserCards(Request request) {

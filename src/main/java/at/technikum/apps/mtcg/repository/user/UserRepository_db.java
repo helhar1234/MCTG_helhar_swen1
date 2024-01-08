@@ -12,7 +12,15 @@ import java.util.Optional;
 
 public class UserRepository_db implements UserRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private Database database = new Database();
+
+    //FOR TESTING
+    public UserRepository_db(Database database) {
+        this.database = database;
+    }
+
+    public UserRepository_db() {
+    }
 
     // SQL STATEMENTS
     private final String CREATE_USER_SQL = "INSERT INTO users (user_id, username, password, isAdmin) VALUES (?,?,?,?)";
@@ -54,10 +62,12 @@ public class UserRepository_db implements UserRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during user save: " + e.getMessage());
+                throw new RuntimeException(e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new RuntimeException(e);
         }
         return Optional.empty(); // Return empty if failed
     }
@@ -75,7 +85,8 @@ public class UserRepository_db implements UserRepository {
                 }
             }
         } catch (SQLException e) {
-            System.out.println(e);
+            System.out.println("Error executing isUsernameExists: " + e.getMessage());
+            throw new RuntimeException(e);
         }
         return false;
     }
@@ -94,9 +105,11 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findByUsername: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new RuntimeException(e);
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
@@ -139,24 +152,20 @@ public class UserRepository_db implements UserRepository {
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    // Assuming you have a method to convert ResultSet to a UserData object
                     return convertResultSetToUserData(resultSet);
                 }
             }
         } catch (SQLException e) {
             System.out.println("Error updating user data: " + e.getMessage());
-            // Handle exception, possibly rethrow as a unchecked exception or a custom exception
+            throw new RuntimeException(e);
         }
-        return null; // Or handle this case as you see fit
+        return null;
     }
 
 
     @Override
     public boolean updateCoins(String userId, int price) {
         boolean success = false;
-
-        // Prepare SQL statement that updates the user's coins by a certain price (which could be negative)
-        // This SQL uses the existing value of coins in the user table
 
         try (Connection connection = database.getConnection();
              PreparedStatement updateCoinsStmt = connection.prepareStatement(UPDATE_COINS_SQL)) {
@@ -172,7 +181,7 @@ public class UserRepository_db implements UserRepository {
             success = affectedRows == 1;
         } catch (SQLException e) {
             System.out.println("Error updating coins: " + e.getMessage());
-            // You might want to handle specific SQL exceptions based on your business logic
+            throw new RuntimeException(e);
         }
         return success;
     }
@@ -192,7 +201,7 @@ public class UserRepository_db implements UserRepository {
             return affectedRows == 1;
         } catch (SQLException e) {
             System.out.println("Error adding card to user's stack: " + e.getMessage());
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
@@ -211,9 +220,11 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findUserById: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new RuntimeException(e);
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
@@ -234,7 +245,7 @@ public class UserRepository_db implements UserRepository {
             success = affectedRows == 1;
         } catch (SQLException e) {
             System.out.println("Error updating elo: " + e.getMessage());
-            // You might want to handle specific SQL exceptions based on your business logic
+            throw new RuntimeException(e);
         }
         return success;
     }

@@ -34,10 +34,10 @@ public class StatsController extends Controller {
     private final SessionService sessionService;
     private final StatsService statsService;
 
-    public StatsController() {
-        this.userService = new UserService();
-        this.sessionService = new SessionService();
-        this.statsService = new StatsService();
+    public StatsController(StatsService statsService, SessionService sessionService, UserService userService ) {
+        this.statsService = statsService;
+        this.sessionService = sessionService;
+        this.userService = userService;
     }
 
     private Response getStats(Request request) {

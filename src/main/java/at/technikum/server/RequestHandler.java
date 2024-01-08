@@ -5,7 +5,6 @@ import at.technikum.server.http.Response;
 import at.technikum.server.util.HttpRequestParser;
 import at.technikum.server.util.HttpResponseFormatter;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,7 +13,7 @@ import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RequestHandler implements Runnable{
+public class RequestHandler implements Runnable {
 
     private BufferedReader in;
     private PrintWriter out;

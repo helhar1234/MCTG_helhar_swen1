@@ -10,7 +10,7 @@ public class Card {
     public Card() {
     }
 
-    Card(String id, String name, int damage, String elementType, String cardType) {
+    public Card(String id, String name, int damage, String elementType, String cardType) {
         this.id = id;
         this.name = name;
         this.damage = damage;

@@ -31,10 +31,10 @@ public class ScoreboardController extends Controller {
     private final SessionService sessionService;
     private final ScoreboardService scoreboardService;
 
-    public ScoreboardController() {
-        this.userService = new UserService();
-        this.sessionService = new SessionService();
-        this.scoreboardService = new ScoreboardService();
+    public ScoreboardController(ScoreboardService scoreboardService, SessionService sessionService, UserService userService) {
+        this.scoreboardService = scoreboardService;
+        this.sessionService = sessionService;
+        this.userService = userService;
     }
 
     private Response getScoreboard(Request request) {

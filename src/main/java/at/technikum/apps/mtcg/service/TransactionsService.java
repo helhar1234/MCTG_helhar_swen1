@@ -13,10 +13,10 @@ public class TransactionsService {
     private final UserRepository userRepository;
     private final PackageRepository packageRepository;
 
-    public TransactionsService() {
-        this.cardRepository = new CardRepository_db();
-        this.userRepository = new UserRepository_db();
-        this.packageRepository = new PackageRepository_db();
+    public TransactionsService(CardRepository cardRepository, UserRepository userRepository, PackageRepository packageRepository) {
+        this.cardRepository = cardRepository;
+        this.userRepository = userRepository;
+        this.packageRepository = packageRepository;
     }
 
     public boolean makeTransaction(String packageId, String userId, int price) {

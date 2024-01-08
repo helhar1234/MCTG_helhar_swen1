@@ -10,6 +10,7 @@ import at.technikum.apps.mtcg.repository.trading.TradingRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
+import java.sql.SQLException;
 import java.util.Optional;
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 
@@ -18,10 +19,10 @@ public class TradingService {
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
 
-    public TradingService() {
-        this.tradingRepository = new TradingRepository_db();
-        this.cardRepository = new CardRepository_db();
-        this.userRepository = new UserRepository_db();
+    public TradingService(TradingRepository tradingRepository, CardRepository cardRepository, UserRepository userRepository) {
+        this.tradingRepository = tradingRepository;
+        this.cardRepository = cardRepository;
+        this.userRepository = userRepository;
     }
 
     public Optional<TradeRequest> getTradeById(String id) {
@@ -35,7 +36,7 @@ public class TradingService {
         return tradingRepository.createTrade(tradeRequest, userId);
     }
 
-    public TradeRequest[] getAllTrades() {
+    public TradeRequest[] getAllTrades() throws SQLException {
         TradeRequest[] trades = tradingRepository.getAllTrades();
 
         for (TradeRequest trade : trades) {
@@ -62,7 +63,7 @@ public class TradingService {
         return tradingRepository.deleteTrade(tradingId);
     }
 
-    public boolean meetsRequirements(TradeRequest tradeRequest, String offeredCardId) {
+    public boolean meetsRequirements(TradeRequest tradeRequest, String offeredCardId) throws SQLException {
         Optional<Card> cardOptional = cardRepository.findCardById(offeredCardId);
 
         if (cardOptional.isPresent()) {
@@ -75,7 +76,7 @@ public class TradingService {
         }
     }
 
-    public boolean trade(String userIdOfBuyer, String cardIdOfBuyer, String userIdOfSeller, String cardIdOfSeller, String tradeId) {
+    public boolean trade(String userIdOfBuyer, String cardIdOfBuyer, String userIdOfSeller, String cardIdOfSeller, String tradeId) throws SQLException {
         return cardRepository.deleteCardFromStack(userIdOfBuyer, cardIdOfBuyer) &&
                 cardRepository.addCardToStack(userIdOfSeller, cardIdOfBuyer) &&
                 cardRepository.deleteCardFromStack(userIdOfSeller, cardIdOfSeller) &&

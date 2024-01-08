@@ -8,11 +8,6 @@ public class ScoreboardService {
 
     private final ScoreboardRepository scoreboardRepository;
 
-    public ScoreboardService() {
-        this.scoreboardRepository = new ScoreboardRepository_db();
-    }
-
-    // FOR TESTING
     public ScoreboardService(ScoreboardRepository scoreboardRepository) {
         this.scoreboardRepository = scoreboardRepository;
     }

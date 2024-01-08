@@ -39,11 +39,11 @@ public class PackageController extends Controller {
 
     private final UserService userService;
 
-    public PackageController() {
-        this.packageService = new PackageService();
-        this.sessionService = new SessionService();
-        this.cardService = new CardService();
-        this.userService = new UserService();
+    public PackageController(PackageService packageService, SessionService sessionService, UserService userService, CardService cardService) {
+        this.packageService = packageService;
+        this.sessionService = sessionService;
+        this.userService = userService;
+        this.cardService = cardService;
     }
 
 
