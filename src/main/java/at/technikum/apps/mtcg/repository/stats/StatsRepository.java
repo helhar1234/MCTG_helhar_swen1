@@ -1,7 +1,9 @@
 package at.technikum.apps.mtcg.repository.stats;
 
-public interface StatsRepository {
-    int getUserWins(String id);
+import java.sql.SQLException;
 
-    int getUserBattles(String id);
+public interface StatsRepository {
+    int getUserWins(String id) throws SQLException;
+
+    int getUserBattles(String id) throws SQLException;
 }

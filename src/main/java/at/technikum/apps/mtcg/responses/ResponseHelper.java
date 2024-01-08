@@ -38,6 +38,10 @@ public class ResponseHelper {
         return new Response(HttpStatus.OK, contentType, message);
     }
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     public static Response badRequestResponse(String message) {
         return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Bad Request: " + message);
     }
@@ -45,4 +49,8 @@ public class ResponseHelper {
     public static Response noContentResponse(String message) {
         return new Response(HttpStatus.NO_CONTENT, HttpContentType.TEXT_PLAIN, message);
     }
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes

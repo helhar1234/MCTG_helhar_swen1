@@ -1,15 +1,20 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.customExceptions.NotFoundException;
+import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.sql.SQLException;
 import java.util.Optional;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
@@ -53,85 +58,64 @@ public class UserController extends Controller {
 
     private Response updateUser(String username, Request request) {
         try {
+            // Authenticate the user
+            User requester = sessionService.authenticateRequest(request);
+
+            // Check if the authenticated user is the requested user or an admin
+            if (!requester.getUsername().equals(username) && !requester.isAdmin()) {
+                return ResponseHelper.forbiddenResponse("Access denied");
+            }
+
             // Map request to UserData class
             ObjectMapper objectMapper = new ObjectMapper();
             UserData userData = objectMapper.readValue(request.getBody(), UserData.class);
 
-            // Get token and token's username from Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
-
-            // Authenticate the token
-            // Authenticate the token
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                // If the token is not authenticated
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
-
-            // Check if the username in token matches the requested username or if the user is an admin
-            boolean isMatchingRoute = sessionService.matchRoute(username, token);
-            boolean isAdmin = sessionService.isAdmin(token); // Ensure this method checks the token, not the username
-            if (!isMatchingRoute && !isAdmin) {
-                // If the authenticated user is neither the requested user nor an admin
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Access denied");
-            }
-
             // Proceed with update if authorized
             UserData updatedUserData = userService.updateUserData(username, userData);
             String jsonUserData = objectMapper.writeValueAsString(updatedUserData);
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, jsonUserData);
+            return ResponseHelper.okResponse(jsonUserData, HttpContentType.APPLICATION_JSON);
 
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (JsonProcessingException e) {
+            // Specific catch for JSON parsing errors
+            return ResponseHelper.badRequestResponse("Error parsing user data: " + e.getMessage());
+        } catch (SQLException e) {
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error in updateUser: " + e.getMessage());
-            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error processing update request");
+            return ResponseHelper.internalServerErrorResponse("Error processing update request: " + e.getMessage());
         }
     }
 
 
     private Response getUser(String username, Request request) {
-        // Extract the token from the Authorization header
-        String authHeader = request.getAuthenticationHeader();
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-        }
-        String[] authParts = authHeader.split("\\s+");
-        String token = authParts[1];
-
-        // Authenticate the token and check if the username matches or if the user is admin
-        boolean isAuthenticated = sessionService.authenticateToken(token);
-        boolean isMatchingRoute = sessionService.matchRoute(username, token);
-        boolean isAdmin = sessionService.isAdmin(token);
-
-        if (!isAuthenticated) {
-            // If the token is not authenticated
-            return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-        }
-
-        if (!isMatchingRoute && !isAdmin) {
-            // If the authenticated user is neither the requested user nor an admin
-            return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Access denied");
-        }
-
-        // Retrieve the user data if the token is authenticated and the username matches or the user is admin
-        Optional<User> userOptional = userService.findUserByUsername(username);
-        if (!userOptional.isPresent()) {
-            // If the user with the provided username does not exist
-            return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "User not found");
-        }
-
         try {
+            // Authenticate the user
+            User requester = sessionService.authenticateRequest(request);
+
+            // Check if the authenticated user is the requested user or an admin
+            if (!requester.getUsername().equals(username) && !requester.isAdmin()) {
+                return ResponseHelper.forbiddenResponse("Access denied");
+            }
+
+            // Retrieve the user data
+            Optional<User> userOptional = userService.findUserByUsername(username);
+            if (!userOptional.isPresent()) {
+                return ResponseHelper.notFoundResponse("User not found");
+            }
+
             ObjectMapper objectMapper = new ObjectMapper();
             String userDataJson = objectMapper.writeValueAsString(userOptional.get());
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userDataJson);
+            return ResponseHelper.okResponse(userDataJson, HttpContentType.APPLICATION_JSON);
+
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (SQLException e) {
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
-            // If JSON serialization fails
             System.out.println("Error converting user data to JSON: " + e.getMessage());
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user data.");
+            return ResponseHelper.internalServerErrorResponse("Internal server error while processing user data: " + e.getMessage());
         }
     }
 
@@ -143,18 +127,25 @@ public class UserController extends Controller {
             User user = objectMapper.readValue(request.getBody(), User.class);
 
             // Attempt to create the user
-            Optional<User> isCreated = userService.createUser(user);
-            if (isCreated.isPresent()) {
+            Optional<User> createdUser = userService.createUser(user);
+            if (createdUser.isPresent()) {
                 // User successfully created
-                return new Response(HttpStatus.CREATED, HttpContentType.TEXT_PLAIN, "User successfully created!");
+                return ResponseHelper.createdResponse("User successfully created!");
             } else {
                 // User with the same username already exists
-                return new Response(HttpStatus.CONFLICT, HttpContentType.TEXT_PLAIN, "User with same name already registered!");
+                return ResponseHelper.conflictResponse("User with same name already registered!");
             }
+        } catch (JsonProcessingException e) {
+            // Specific catch for JSON parsing errors
+            return ResponseHelper.badRequestResponse("Error parsing user data: " + e.getMessage());
+        } catch (SQLException e) {
+            // Catch for database errors
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
-            // Handle any deserialization or other exceptions
-            System.out.println(e);
-            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "An unexpecting error occured" + e);
+            // General catch for other exceptions
+            System.out.println("Error creating user: " + e.getMessage());
+            return ResponseHelper.badRequestResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
+
 }

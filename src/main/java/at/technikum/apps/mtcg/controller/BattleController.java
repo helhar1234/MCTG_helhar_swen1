@@ -1,7 +1,10 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.customExceptions.NotFoundException;
+import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.BattleService;
 import at.technikum.apps.mtcg.service.DeckService;
 import at.technikum.apps.mtcg.service.SessionService;
@@ -13,7 +16,6 @@ import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.SQLException;
-import java.util.Optional;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
 // TODO: ADD ELO Abfrage
@@ -50,61 +52,31 @@ public class BattleController extends Controller {
 
     private Response battle(Request request) {
         try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return unauthorizedResponse("No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
+            User player = sessionService.authenticateRequest(request);
 
-            // Authenticate the token and get the player
-            if (!sessionService.authenticateToken(token)) {
-                return unauthorizedResponse("Invalid token");
-            }
-
-            Optional<User> playerOpt = sessionService.getUserByToken(token);
-            if (playerOpt.isEmpty()) {
-                return unauthorizedResponse("User does not exist");
-            }
-            User player = playerOpt.get();
-
-            // Check if the player has a deck set up
             if (!deckService.hasDeckSet(player.getId())) {
-                return conflictResponse("Player " + player.getUsername() + " has no deck set up");
+                return ResponseHelper.conflictResponse("Player " + player.getUsername() + " has no deck set up");
             }
 
-            BattleResult battleResult = null;
-            try {
-                battleResult = battleService.battle(player);
-            } catch (SQLException e) {
-                return internalServerErrorResponse("Error occurred during battle");
+            BattleResult battleResult = battleService.battle(player);
+            if (battleResult.getStatus().equals("no_opponent")) {
+                return ResponseHelper.okResponse("No opponent found for battle - Try again later:)");
             }
-            if (battleResult == null) {
-                return internalServerErrorResponse("Battle Could not be started");
-            }
-
             ObjectMapper objectMapper = new ObjectMapper();
             String responseBody = objectMapper.writeValueAsString(battleResult);
             return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, responseBody);
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (SQLException e) {
+            // Hier könnte mehr Kontext hinzugefügt werden, um die Fehlerursache besser zu verstehen.
+            return ResponseHelper.internalServerErrorResponse("Database error during battle: " + e.getMessage());
         } catch (RuntimeException e) {
-            return internalServerErrorResponse("Error occurred during battle: " + e.getMessage());
+            // Statt RuntimeException könnten Sie spezifischere Exceptions fangen, falls möglich.
+            return ResponseHelper.internalServerErrorResponse("Runtime error during battle: " + e.getMessage());
         } catch (Exception e) {
-            return internalServerErrorResponse("An unexpected error occurred: " + e.getMessage());
+            // Generische Exception als letztes Sicherheitsnetz.
+            return ResponseHelper.internalServerErrorResponse("Unexpected error during battle: " + e.getMessage());
         }
-    }
-
-    private Response unauthorizedResponse(String message) {
-        return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: " + message);
-    }
-
-    private Response conflictResponse(String message) {
-        return new Response(HttpStatus.CONFLICT, HttpContentType.TEXT_PLAIN, message);
-    }
-
-    private Response internalServerErrorResponse(String message) {
-        System.out.println(message);
-        return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, message);
     }
 
 

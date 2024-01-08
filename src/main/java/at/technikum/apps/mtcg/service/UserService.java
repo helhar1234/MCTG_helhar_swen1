@@ -3,8 +3,8 @@ package at.technikum.apps.mtcg.service;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,7 +18,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public Optional<User> createUser(User user) {
+    public Optional<User> createUser(User user) throws SQLException {
         user.setId(UUID.randomUUID().toString());
         user.setAdmin(Objects.equals(user.getUsername(), "admin"));
         if (userRepository.isUsernameExists(user.getUsername())) {
@@ -27,15 +27,15 @@ public class UserService {
         return userRepository.saveUser(user);
     }
 
-    public Optional<User> findUserById(String userId) {
+    public Optional<User> findUserById(String userId) throws SQLException {
         return userRepository.findUserById(userId);
     }
 
-    public Optional<User> findUserByUsername(String username) {
+    public Optional<User> findUserByUsername(String username) throws SQLException {
         return userRepository.findByUsername(username);
     }
 
-    public UserData updateUserData(String username, UserData userData) {
+    public UserData updateUserData(String username, UserData userData) throws SQLException {
         return userRepository.updateUserData(userRepository.findByUsername(username).get().getId(), userData);
     }
 

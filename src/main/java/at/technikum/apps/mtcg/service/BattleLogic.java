@@ -4,19 +4,16 @@ import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
-import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
-import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
-// TODO: MAKE DECK INTO OBJECT AND ADD TO DB AT END OF GAME -> less db abfragen
-// TODO: ADD MORE LOGGING
 // TODO: additional feature -> winner kriegt eine komplett neue karte
 // FAQ: CAN GAME BE DRAW? -> unit test for all cases
 public class BattleLogic {
@@ -27,110 +24,115 @@ public class BattleLogic {
     private static final int MAX_ROUNDS = 100;
     private static final int ELO_WIN = 3;
     private static final int ELO_LOSS = -5;
-    private static final int ELO_START = 100;
 
-    public BattleLogic() {
-        this.battleRepository = new BattleRepository_db();
-        this.userRepository = new UserRepository_db();
-        this.cardRepository = new CardRepository_db();
+    public BattleLogic(BattleRepository battleRepository, UserRepository userRepository, CardRepository cardRepository) {
+        this.battleRepository = battleRepository;
+        this.userRepository = userRepository;
+        this.cardRepository = cardRepository;
     }
 
     public BattleResult performBattle(String battleId, User playerA, User playerB) throws SQLException {
         boolean started = battleRepository.startBattle(battleId, playerA.getId(), playerB.getId());
         if (!started) {
-            // Handle the case where the battle cannot be started.
+            battleRepository.addToLog(battleId, "Failed to start the battle.\n");
             return null;
         }
 
         // Start log
-        battleRepository.startLog(battleId, "Battle started between " + playerA.getUsername() + " and " + playerB.getUsername() + ".\n");
+        String introLog = "The grand battle commences in the mystical arena! " +
+                "Champion " + playerA.getUsername() + " versus the valiant " + playerB.getUsername() +
+                ". May the bravest warrior prevail!\n";
 
-        // Get player decks
-        Card[] playerADeck = cardRepository.getUserDeckCards(playerA.getId());
-        Card[] playerBDeck = cardRepository.getUserDeckCards(playerB.getId());
+        battleRepository.startLog(battleId, introLog);
+        // Get player decks and store them in objects
+        List<Card> playerADeck = new ArrayList<>(Arrays.asList(cardRepository.getUserDeckCards(playerA.getId())));
+        List<Card> playerBDeck = new ArrayList<>(Arrays.asList(cardRepository.getUserDeckCards(playerB.getId())));
 
+        // Log initial deck states
+        logDeckState("Initial", playerA, playerADeck, battleId);
+        logDeckState("Initial", playerB, playerBDeck, battleId);
 
         // Initialize ELO points
-        int eloA = ELO_START;
-        int eloB = ELO_START;
+        int eloA = playerA.getEloRating();
+        int eloB = playerB.getEloRating();
 
         // Battle logic
         int round = 0;
-        while (round < MAX_ROUNDS && playerADeck.length > 0 && playerBDeck.length > 0 && eloA >= 0 && eloB >= 0) {
+        boolean isDraw = true;
+        while (round < MAX_ROUNDS && !playerADeck.isEmpty() && !playerBDeck.isEmpty()) {
             round++;
 
             // Shuffle decks
-            shuffleDeck(playerADeck);
-            shuffleDeck(playerBDeck);
+            Collections.shuffle(playerADeck);
+            Collections.shuffle(playerBDeck);
 
-            Card cardA = playerADeck[0];
-            Card cardB = playerBDeck[0];
+            Card cardA = playerADeck.get(0);
+            Card cardB = playerBDeck.get(0);
 
             // Determine winner of the round
             Card winnerCard = determineRoundWinner(cardA, cardB);
-            User roundWinner = null;
+            String battleNarrative = "Epic Round " + round + ": " +
+                    "The mighty " + cardA.getName() + " of " + playerA.getUsername() +
+                    " clashes against the fearsome " + cardB.getName() + " of " + playerB.getUsername() + ". ";
+
             if (winnerCard != null) {
+                isDraw = false;
                 if (winnerCard.equals(cardA)) {
-                    roundWinner = playerA;
-                    if (!cardRepository.isCardInStack(roundWinner.getId(), cardB.getId())) {
-                        cardRepository.deleteCardFromStack(playerB.getId(), cardB.getId());
-                        cardRepository.deleteCardFromStack(roundWinner.getId(), cardA.getId());
-                        cardRepository.addCardToStack(roundWinner.getId(), cardB.getId());
-                        cardRepository.addCardToStack(playerB.getId(), cardA.getId());
-                        cardRepository.addCardToDeck(roundWinner.getId(), cardB.getId());
-                        cardRepository.addCardToDeck(playerB.getId(), cardA.getId());
-                        String roundLog = "Card " + cardB.getName() + " was captured by " + roundWinner.getUsername() + "\n";
-                        battleRepository.addToLog(battleId, roundLog);
-
-                        System.out.println(roundLog);
-                    }
-                    eloA += ELO_WIN;
-                    eloB -= ELO_LOSS;
+                    playerADeck.add(cardB); // Player A captures Player B's card
+                    battleNarrative += "In a stunning display of power, " + playerA.getUsername() + "'s " + cardA.getName() +
+                            " triumphs over " + playerB.getUsername() + "'s " + cardB.getName() +
+                            ", capturing the foe!";
                 } else {
-                    roundWinner = playerB;
-                    if (!cardRepository.isCardInStack(roundWinner.getId(), cardA.getId())) {
-                        cardRepository.deleteCardFromStack(playerA.getId(), cardA.getId());
-                        cardRepository.deleteCardFromStack(roundWinner.getId(), cardB.getId());
-                        cardRepository.addCardToStack(roundWinner.getId(), cardA.getId());
-                        cardRepository.addCardToStack(playerA.getId(), cardB.getId());
-                        cardRepository.addCardToDeck(roundWinner.getId(), cardA.getId());
-                        cardRepository.addCardToDeck(playerA.getId(), cardB.getId());
-                        String roundLog = "Card " + cardA.getName() + " was captured by " + roundWinner.getUsername() + "\n";
-                        battleRepository.addToLog(battleId, roundLog);
-
-                        System.out.println(roundLog);
-                    }
-                    eloB += ELO_WIN;
-                    eloA -= ELO_LOSS;
+                    playerBDeck.add(cardA); // Player B captures Player A's card
+                    battleNarrative += "With a cunning maneuver, " + playerB.getUsername() + "'s " + cardB.getName() +
+                            " overpowers " + playerA.getUsername() + "'s " + cardA.getName() +
+                            ", claiming victory!";
                 }
-
+            } else {
+                battleNarrative += "The clash of titans ends in a deadlock, none could overpower the other!";
             }
 
-            // Make battle log entry
-            String roundLog = "Round " + round + ": " +
-                    cardA.getName() + " vs " +
-                    cardB.getName() + " -> " +
-                    (roundWinner != null ? roundWinner.getUsername() + " wins" : "Draw")
-                    + ".\n";
-            battleRepository.addToLog(battleId, roundLog);
+            battleRepository.addToLog(battleId, battleNarrative + "\n");
         }
 
-        // Determine the final winner
-        User finalWinner = eloA > eloB ? playerA : (eloB > eloA ? playerB : null);
-        if (finalWinner != null) {
-            battleRepository.crownWinner(battleId, finalWinner.getId());
+        // Save deck changes to the stack
+        saveDeckToStack(playerA, playerADeck, battleId);
+        saveDeckToStack(playerB, playerBDeck, battleId);
+
+        // Determine the final winner and update ELO
+        if (!isDraw) {
+            User finalWinner = playerADeck.size() > playerBDeck.size() ? playerA : playerB;
+            User finalLoser = finalWinner.equals(playerA) ? playerB : playerA;
+            eloA += finalWinner.equals(playerA) ? ELO_WIN : ELO_LOSS;
+            eloB += finalWinner.equals(playerB) ? ELO_WIN : ELO_LOSS;
             userRepository.updateELO(playerA.getId(), eloA);
             userRepository.updateELO(playerB.getId(), eloB);
-            String roundLog = "GAME OVER!\n" + finalWinner.getUsername() + " won the Battle!\n";
-            battleRepository.addToLog(battleId, roundLog);
+            battleRepository.crownWinner(battleId, finalWinner.getId());
+            battleRepository.addToLog(battleId, finalWinner.getUsername() + " wins the battle with final ELO: " + (finalWinner.equals(playerA) ? eloA : eloB) + "\n");
+        } else {
+            battleRepository.addToLog(battleId, "The battle ended in a draw.\n");
+            battleRepository.crownWinner(battleId, null);
         }
 
         // Return the battle result
         return battleRepository.findBattleById(battleId).orElse(null);
     }
 
-    private void shuffleDeck(Card[] deck) {
-        Collections.shuffle(Arrays.asList(deck));
+    private void logDeckState(String state, User player, List<Card> deck, String battleId) throws SQLException {
+        StringBuilder log = new StringBuilder(state + " deck state for " + player.getUsername() + ": ");
+        for (Card card : deck) {
+            log.append(card.getName()).append(", ");
+        }
+        battleRepository.addToLog(battleId, log.toString() + "\n");
+    }
+
+    private void saveDeckToStack(User player, List<Card> deck, String battleId) throws SQLException {
+        for (Card card : deck) {
+            if (!cardRepository.isCardInStack(player.getId(), card.getId())) {
+                cardRepository.addCardToStack(player.getId(), card.getId());
+                battleRepository.addToLog(battleId, "Card " + card.getName() + " added to stack for " + player.getUsername() + ".\n");
+            }
+        }
     }
 
     private Card determineRoundWinner(Card cardA, Card cardB) {
@@ -159,8 +161,7 @@ public class BattleLogic {
     }
 
     private boolean isSpecialRuleApplicable(Card cardA, Card cardB) {
-        // Check for any special rules that might apply
-        // Add more special rules as required
+        // Check for any special rules that apply
         return (cardA.getName().equalsIgnoreCase("Goblin") && cardB.getName().equalsIgnoreCase("Dragon")) ||
                 (cardA.getName().equalsIgnoreCase("Wizzard") && cardB.getName().equalsIgnoreCase("Ork")) ||
                 (cardA.getName().equalsIgnoreCase("Knight") && cardB.getCardType().equalsIgnoreCase("spell") && cardB.getElementType().equalsIgnoreCase("Water")) ||

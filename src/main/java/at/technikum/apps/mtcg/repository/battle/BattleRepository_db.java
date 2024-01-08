@@ -66,10 +66,13 @@ public class BattleRepository_db implements BattleRepository {
                     );
                     return Optional.of(battle);
                 }
+            } catch (SQLException e) {
+                System.out.println("Error finding battle by ID: " + e.getMessage());
+                throw new SQLException("Error finding battle by ID: " + e);
             }
         } catch (SQLException e) {
-            System.out.println("Error finding battle by ID: " + e.getMessage());
-            throw new SQLException(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty();
     }
@@ -95,12 +98,12 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during battle creation: " + e.getMessage());
-                throw new SQLException(e);
+                throw new SQLException("Error during battle creation: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException(e);
+            throw new SQLException("Database connection error: " + e);
         }
         return false;
     }
@@ -124,12 +127,12 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log creation: " + e.getMessage());
-                throw new SQLException(e);
+                throw new SQLException("Error during Log creation: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException(e);
+            throw new SQLException("Database connection error: " + e);
         }
         return false;
     }
@@ -153,12 +156,12 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log addition: " + e.getMessage());
-                throw new SQLException(e);
+                throw new SQLException("Error during Log addition: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException(e);
+            throw new SQLException("Database connection error: " + e);
         }
         return false;
     }
@@ -182,12 +185,12 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log addition: " + e.getMessage());
-                throw new SQLException(e);
+                throw new SQLException("Error during Log addition: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException(e);
+            throw new SQLException("Database connection error: " + e);
         }
         return false;
     }

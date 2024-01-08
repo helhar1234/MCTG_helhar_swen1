@@ -1,6 +1,9 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.customExceptions.NotFoundException;
+import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.StatsService;
 import at.technikum.apps.mtcg.service.UserService;
@@ -10,8 +13,8 @@ import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.sql.SQLException;
 import java.util.Map;
-import java.util.Optional;
 
 public class StatsController extends Controller {
     @Override
@@ -34,7 +37,7 @@ public class StatsController extends Controller {
     private final SessionService sessionService;
     private final StatsService statsService;
 
-    public StatsController(StatsService statsService, SessionService sessionService, UserService userService ) {
+    public StatsController(StatsService statsService, SessionService sessionService, UserService userService) {
         this.statsService = statsService;
         this.sessionService = sessionService;
         this.userService = userService;
@@ -42,31 +45,15 @@ public class StatsController extends Controller {
 
     private Response getStats(Request request) {
         try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
+            // Authenticate the user
+            User user = sessionService.authenticateRequest(request);
 
-            // Authenticate the token
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
-
-            // Get the user
-            Optional<User> user = sessionService.getUserByToken(token);
-            if (user.isEmpty()) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
-            }
-
-            int wins = statsService.getUserWins(user.get().getId());
-            int battles = statsService.getUserBattles(user.get().getId());
+            // Get user statistics
+            int wins = statsService.getUserWins(user.getId());
+            int battles = statsService.getUserBattles(user.getId());
 
             Map<String, Object> userStats = Map.of(
-                    "eloRating", user.get().getEloRating(),
+                    "eloRating", user.getEloRating(),
                     "wins", wins,
                     "totalBattles", battles
             );
@@ -74,13 +61,17 @@ public class StatsController extends Controller {
             ObjectMapper objectMapper = new ObjectMapper();
             String userStatsJson = objectMapper.writeValueAsString(userStats);
 
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, userStatsJson);
+            return ResponseHelper.okResponse(userStatsJson, HttpContentType.APPLICATION_JSON);
 
-
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (SQLException e) {
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error retrieving user stats: " + e.getMessage());
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing user stats.");
+            return ResponseHelper.internalServerErrorResponse("Internal server error while processing user stats: " + e.getMessage());
         }
     }
+
 
 }

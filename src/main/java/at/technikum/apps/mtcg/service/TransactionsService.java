@@ -2,11 +2,10 @@ package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
-import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
-import at.technikum.apps.mtcg.repository.packages.PackageRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository_db;
+
+import java.sql.SQLException;
 
 public class TransactionsService {
     private final CardRepository cardRepository;
@@ -19,7 +18,7 @@ public class TransactionsService {
         this.packageRepository = packageRepository;
     }
 
-    public boolean makeTransaction(String packageId, String userId, int price) {
+    public boolean makeTransaction(String packageId, String userId, int price) throws SQLException {
         // Attempt to deduct the price from the user's coins
         boolean coinsUpdated = userRepository.updateCoins(userId, -price); // Assuming this method deducts coins when given a negative amount
 

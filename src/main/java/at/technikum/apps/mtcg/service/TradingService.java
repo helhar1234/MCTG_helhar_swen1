@@ -4,11 +4,8 @@ import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.TradeRequest;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
-import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 import at.technikum.apps.mtcg.repository.trading.TradingRepository;
-import at.technikum.apps.mtcg.repository.trading.TradingRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -25,11 +22,11 @@ public class TradingService {
         this.userRepository = userRepository;
     }
 
-    public Optional<TradeRequest> getTradeById(String id) {
+    public Optional<TradeRequest> getTradeById(String id) throws SQLException {
         return tradingRepository.getTradeById(id);
     }
 
-    public boolean createTrade(TradeRequest tradeRequest, String userId) {
+    public boolean createTrade(TradeRequest tradeRequest, String userId) throws SQLException {
         if (tradingRepository.getTradeById(tradeRequest.getId()).isPresent()) {
             return false;
         }
@@ -55,11 +52,11 @@ public class TradingService {
         return trades;
     }
 
-    public boolean isUserTrade(String userId, String tradingId) {
+    public boolean isUserTrade(String userId, String tradingId) throws SQLException {
         return tradingRepository.isUserTrade(userId, tradingId);
     }
 
-    public boolean deleteTrade(String tradingId) {
+    public boolean deleteTrade(String tradingId) throws SQLException {
         return tradingRepository.deleteTrade(tradingId);
     }
 
