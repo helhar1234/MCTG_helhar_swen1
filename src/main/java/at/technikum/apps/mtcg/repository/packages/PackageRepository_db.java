@@ -27,49 +27,72 @@ public class PackageRepository_db implements PackageRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public boolean savePackage(String id) {
+    public boolean savePackage(String id) throws SQLException {
         boolean success = false;
 
-        try (Connection connection = database.getConnection();
-             PreparedStatement savePackageStatement = connection.prepareStatement(SAVE_PACKAGE_SQL)) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            savePackageStatement.setString(1, id);
+            try (PreparedStatement savePackageStatement = connection.prepareStatement(SAVE_PACKAGE_SQL)) {
+                savePackageStatement.setString(1, id);
 
-            // Execute the query and get the result set
-            try (ResultSet resultSet = savePackageStatement.executeQuery()) {
-                // If resultSet has an entry, the insert was successful
-                if (resultSet.next()) {
-                    String returnedId = resultSet.getString("package_id");
-                    success = returnedId != null && !returnedId.isEmpty();
+                try (ResultSet resultSet = savePackageStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String returnedId = resultSet.getString("package_id");
+                        success = returnedId != null && !returnedId.isEmpty();
+                    }
                 }
+
+                if (success) {
+                    connection.commit(); // Commit the transaction
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during package save: " + e.getMessage());
+                throw new SQLException("Error during package save: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error during package save: " + e.getMessage());
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return success;
     }
 
+
     @Override
-    public boolean addCardToPackage(String packageId, String cardId) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement connectStmt = connection.prepareStatement(CONNECT_CARDS_PACKAGES_SQL)) {
+    public boolean addCardToPackage(String packageId, String cardId) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            connectStmt.setString(1, cardId);
-            connectStmt.setString(2, packageId);
+            try (PreparedStatement connectStmt = connection.prepareStatement(CONNECT_CARDS_PACKAGES_SQL)) {
+                connectStmt.setString(1, cardId);
+                connectStmt.setString(2, packageId);
 
-            // Execute the insert statement using executeUpdate
-            int affectedRows = connectStmt.executeUpdate();
+                int affectedRows = connectStmt.executeUpdate();
 
-            // Check if the insert was successful based on affected rows
-            return affectedRows > 0;
+                if (affectedRows > 0) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error connecting card to package: " + e.getMessage());
+                throw new SQLException(e);
+            }
         } catch (SQLException e) {
-            System.out.println("Error connecting card to package: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException(e);
         }
     }
 
+
     @Override
-    public Optional<Package> findPackageById(String id) {
+    public Optional<Package> findPackageById(String id) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_PACKAGE_BY_ID_SQL)) {
 
@@ -81,16 +104,19 @@ public class PackageRepository_db implements PackageRepository {
                     Package aPackage = convertResultSetToPackage(resultSet);
                     return Optional.of(aPackage);
                 }
+            } catch (SQLException e) {
+                System.out.println("Error finding package by ID: " + e.getMessage());
+                throw new SQLException("Error finding package by ID: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error finding package by ID: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public Card[] getPackageCardsById(String packageId) {
+    public Card[] getPackageCardsById(String packageId) throws SQLException {
         List<Card> cards = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -103,17 +129,20 @@ public class PackageRepository_db implements PackageRepository {
                     Card card = convertResultSetToCard(resultSet);
                     cards.add(card);
                 }
+            } catch (SQLException e) {
+                System.out.println("Error finding cards in package: " + e.getMessage());
+                throw new SQLException("Error finding cards in package: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error finding cards in package: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
 
         return cards.toArray(new Card[0]);
     }
 
     @Override
-    public String getFirstPackageNotPossessing(String userId) {
+    public String getFirstPackageNotPossessing(String userId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(GET_FIRST_PACKAGE_NOT_POSSESSING_SQL)) {
 
@@ -123,15 +152,19 @@ public class PackageRepository_db implements PackageRepository {
                 if (resultSet.next()) {
                     return resultSet.getString("package_id");
                 }
+            } catch (SQLException e) {
+                System.out.println("Error finding first package not possessing: " + e.getMessage());
+                throw new SQLException("Error finding first package not possessing: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error finding first package not possessing: " + e.getMessage());
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return null;
     }
 
     @Override
-    public Optional<Package> getAvailablePackages(String packageId) {
+    public Optional<Package> getAvailablePackages(String packageId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_AVAILABLE_PACKAGE_BY_ID_SQL)) {
 
@@ -143,32 +176,45 @@ public class PackageRepository_db implements PackageRepository {
                     Package aPackage = convertResultSetToPackage(resultSet);
                     return Optional.of(aPackage);
                 }
+            } catch (SQLException e) {
+                System.out.println("Error finding package by ID: " + e.getMessage());
+                throw new SQLException("Error finding package by ID: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error finding package by ID: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean deletePackage(String packageId) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(UPDATE_PACKAGE_SOLD_SQL)) {
+    public boolean deletePackage(String packageId) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            stmt.setString(1, packageId);
+            try (PreparedStatement stmt = connection.prepareStatement(UPDATE_PACKAGE_SOLD_SQL)) {
+                stmt.setString(1, packageId);
 
-            // Execute update statement
-            int affectedRows = stmt.executeUpdate();
+                int affectedRows = stmt.executeUpdate();
 
-            // Return true if the update was successful (one row updated)
-            return affectedRows == 1;
-
+                if (affectedRows == 1) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error updating package sold status: " + e.getMessage());
+                throw new SQLException("Error updating package sold status: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error updating package sold status: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
     }
+
 
     private Package convertResultSetToPackage(ResultSet resultSet) throws SQLException {
         Package aPackage = new Package();

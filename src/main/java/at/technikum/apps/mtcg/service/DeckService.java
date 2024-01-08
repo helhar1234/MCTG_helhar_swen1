@@ -2,7 +2,6 @@ package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
-import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 
 import java.sql.SQLException;
 

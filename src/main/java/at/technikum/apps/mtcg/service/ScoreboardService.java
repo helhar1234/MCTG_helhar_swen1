@@ -2,7 +2,8 @@ package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.UserStats;
 import at.technikum.apps.mtcg.repository.scoreboard.ScoreboardRepository;
-import at.technikum.apps.mtcg.repository.scoreboard.ScoreboardRepository_db;
+
+import java.sql.SQLException;
 
 public class ScoreboardService {
 
@@ -12,7 +13,7 @@ public class ScoreboardService {
         this.scoreboardRepository = scoreboardRepository;
     }
 
-    public UserStats[] getScoreboard() {
+    public UserStats[] getScoreboard() throws SQLException {
         return scoreboardRepository.getScoreboard();
     }
 }

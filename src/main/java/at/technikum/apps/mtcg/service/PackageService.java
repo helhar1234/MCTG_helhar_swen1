@@ -3,9 +3,7 @@ package at.technikum.apps.mtcg.service;
 import at.technikum.apps.mtcg.entity.Package;
 import at.technikum.apps.mtcg.entity.PackageCard;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
-import at.technikum.apps.mtcg.repository.card.CardRepository_db;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
-import at.technikum.apps.mtcg.repository.packages.PackageRepository_db;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -53,15 +51,15 @@ public class PackageService {
         return true;
     }
 
-    public Optional<Package> getPackageById(String id) {
+    public Optional<Package> getPackageById(String id) throws SQLException {
         return packageRepository.findPackageById(id);
     }
 
-    public String getRandomPackage(String userId) {
+    public String getRandomPackage(String userId) throws SQLException {
         return packageRepository.getFirstPackageNotPossessing(userId);
     }
 
-    public Optional<Package> getAvailablePackages(String packageId) {
+    public Optional<Package> getAvailablePackages(String packageId) throws SQLException {
         return packageRepository.getAvailablePackages(packageId);
     }
 }

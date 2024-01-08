@@ -34,7 +34,7 @@ public class UserRepository_db implements UserRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public Optional<User> saveUser(User user) {
+    public Optional<User> saveUser(User user) throws SQLException {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -62,19 +62,19 @@ public class UserRepository_db implements UserRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during user save: " + e.getMessage());
-                throw new RuntimeException(e);
+                throw new SQLException("Error during user save: " + e.getMessage());
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty(); // Return empty if failed
     }
 
 
     @Override
-    public boolean isUsernameExists(String username) {
+    public boolean isUsernameExists(String username) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(SEARCH_USERNAME_SQL)) {
 
@@ -83,16 +83,19 @@ public class UserRepository_db implements UserRepository {
                 if (resultSet.next()) {
                     return resultSet.getInt("count") > 0;
                 }
+            } catch (SQLException e) {
+                System.out.println("Error executing isUsernameExists: " + e.getMessage());
+                throw new SQLException("Error executing isUsernameExists: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error executing isUsernameExists: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public Optional<User> findByUsername(String username) {
+    public Optional<User> findByUsername(String username) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_USER_SQL)) {
 
@@ -105,18 +108,18 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findByUsername: " + e.getMessage());
-                throw new RuntimeException(e);
+                throw new SQLException("Error executing findByUsername: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
 
     @Override
-    public UserData updateUserData(String id, UserData userData) {
+    public UserData updateUserData(String id, UserData userData) throws SQLException {
         StringBuilder sql = new StringBuilder("UPDATE userdata SET ");
         List<Object> parameters = new ArrayList<>();
         if (userData.getName() != null) {
@@ -133,81 +136,106 @@ public class UserRepository_db implements UserRepository {
         }
 
         // Remove the last comma and space if any parameters were added
-        if (!parameters.isEmpty()) {
-            sql.setLength(sql.length() - 2);
-        } else {
+        if (parameters.isEmpty()) {
             // No fields to update
             return userData;
+        } else {
+            sql.setLength(sql.length() - 2); // Remove the last comma and space
         }
 
         sql.append(" WHERE user_fk=? RETURNING *");
         parameters.add(id);
 
-        try (Connection connection = database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            for (int i = 0; i < parameters.size(); i++) {
-                statement.setObject(i + 1, parameters.get(i));
-            }
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return convertResultSetToUserData(resultSet);
+            try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+                for (int i = 0; i < parameters.size(); i++) {
+                    statement.setObject(i + 1, parameters.get(i));
                 }
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        connection.commit(); // Commit the transaction
+                        return convertResultSetToUserData(resultSet);
+                    } else {
+                        connection.rollback(); // Rollback the transaction
+                        return null;
+                    }
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error updating user data: " + e.getMessage());
+                throw new SQLException("Error updating user data: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error updating user data: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e.getMessage());
         }
-        return null;
     }
 
 
     @Override
-    public boolean updateCoins(String userId, int price) {
-        boolean success = false;
+    public boolean updateCoins(String userId, int price) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-        try (Connection connection = database.getConnection();
-             PreparedStatement updateCoinsStmt = connection.prepareStatement(UPDATE_COINS_SQL)) {
+            try (PreparedStatement updateCoinsStmt = connection.prepareStatement(UPDATE_COINS_SQL)) {
+                updateCoinsStmt.setInt(1, price);
+                updateCoinsStmt.setString(2, userId);
+                updateCoinsStmt.setInt(3, price);
 
-            updateCoinsStmt.setInt(1, price);
-            updateCoinsStmt.setString(2, userId);
-            updateCoinsStmt.setInt(3, price); // To ensure the final balance is not negative
+                int affectedRows = updateCoinsStmt.executeUpdate();
 
-            // Execute the update statement
-            int affectedRows = updateCoinsStmt.executeUpdate();
-
-            // Check if the update was successful
-            success = affectedRows == 1;
+                if (affectedRows == 1) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                System.out.println("Error updating coins: " + e.getMessage());
+                throw new SQLException("Error updating coins: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error updating coins: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e.getMessage());
         }
-        return success;
     }
 
+
     @Override
-    public boolean addCardToStack(String userId, Card card) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement addCardStmt = connection.prepareStatement(ADD_CARD_TO_USER_SQL)) {
+    public boolean addCardToStack(String userId, Card card) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            addCardStmt.setString(1, userId);
-            addCardStmt.setString(2, card.getId());
+            try (PreparedStatement addCardStmt = connection.prepareStatement(ADD_CARD_TO_USER_SQL)) {
+                addCardStmt.setString(1, userId);
+                addCardStmt.setString(2, card.getId());
 
-            // Execute the insert statement
-            int affectedRows = addCardStmt.executeUpdate();
+                int affectedRows = addCardStmt.executeUpdate();
 
-            // Check if the insert was successful
-            return affectedRows == 1;
+                if (affectedRows == 1) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                System.out.println("Error adding card to user's stack: " + e.getMessage());
+                throw new SQLException("Error adding card to user's stack: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error adding card to user's stack: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e.getMessage());
         }
     }
 
 
     @Override
-    public Optional<User> findUserById(String id) {
+    public Optional<User> findUserById(String id) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_USER_BY_ID_SQL)) {
 
@@ -220,34 +248,41 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findUserById: " + e.getMessage());
-                throw new RuntimeException(e);
+                throw new SQLException("Error executing findUserById: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new SQLException("Database connection error: " + e.getMessage());
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
     @Override
-    public boolean updateELO(String userId, int eloToAdd) {
-        boolean success = false;
-        try (Connection connection = database.getConnection();
-             PreparedStatement updateELOStmt = connection.prepareStatement(UPDATE_ELO_SQL)) {
+    public boolean updateELO(String userId, int eloToAdd) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            updateELOStmt.setInt(1, eloToAdd);
-            updateELOStmt.setString(2, userId);
+            try (PreparedStatement updateELOStmt = connection.prepareStatement(UPDATE_ELO_SQL)) {
+                updateELOStmt.setInt(1, eloToAdd);
+                updateELOStmt.setString(2, userId);
 
-            // Execute the update statement
-            int affectedRows = updateELOStmt.executeUpdate();
+                int affectedRows = updateELOStmt.executeUpdate();
 
-            // Check if the update was successful
-            success = affectedRows == 1;
+                if (affectedRows == 1) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                System.out.println("Error updating elo: " + e.getMessage());
+                throw new SQLException("Error updating elo: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error updating elo: " + e.getMessage());
-            throw new RuntimeException(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e.getMessage());
         }
-        return success;
     }
 
 

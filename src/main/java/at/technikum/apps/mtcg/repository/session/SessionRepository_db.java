@@ -24,32 +24,37 @@ public class SessionRepository_db implements SessionRepository {
 
     //IMPLEMENTATIONS
     @Override
-    public Optional<String> generateToken(User user) {
-        try (
-                Connection connection = database.getConnection();
-                PreparedStatement statement = connection.prepareStatement(SAVE_TOKEN_SQL)) {
+    public Optional<String> generateToken(User user) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            // Prepare the token to be saved
-            statement.setString(1, user.getId());
-            statement.setString(2, user.getUsername() + "-mtcgToken");
+            try (PreparedStatement statement = connection.prepareStatement(SAVE_TOKEN_SQL)) {
+                statement.setString(1, user.getId());
+                statement.setString(2, user.getUsername() + "-mtcgToken");
 
-            // Execute the update and get the generated token
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    // Retrieve the token from the result set
-                    String returnedToken = resultSet.getString("token_name");
-                    return Optional.of(returnedToken);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String returnedToken = resultSet.getString("token_name");
+                        connection.commit(); // Commit the transaction
+                        return Optional.of(returnedToken);
+                    }
                 }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error while generating token: " + e.getMessage());
+                throw new SQLException("Error while generating token: " + e.getMessage());
             }
+            connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
-            System.out.println("Error while generating token: " + e.getMessage());
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
-        // Return an empty Optional if there was an error
         return Optional.empty();
     }
 
+
     @Override
-    public Optional<User> findByToken(String token) {
+    public Optional<User> findByToken(String token) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_USER_BY_TOKEN_SQL)) {
 
@@ -62,15 +67,17 @@ public class SessionRepository_db implements SessionRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findByToken: " + e.getMessage());
+                throw new SQLException("Error executing findByToken: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
     @Override
-    public Optional<String> findTokenByUserId(String userId) {
+    public Optional<String> findTokenByUserId(String userId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_TOKEN_BY_USER_SQL)) {
 
@@ -83,43 +90,58 @@ public class SessionRepository_db implements SessionRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findByUsername: " + e.getMessage());
+                throw new SQLException("Error executing findByUsername: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
     @Override
-    public boolean deleteToken(String userId) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement deleteStmt = connection.prepareStatement(DELETE_TOKEN_SQL)) {
-            deleteStmt.setString(1, userId);
-            // Execute delete statement
-            deleteStmt.executeUpdate();
-            return true;
+    public boolean deleteToken(String userId) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
+            try (PreparedStatement deleteStmt = connection.prepareStatement(DELETE_TOKEN_SQL)) {
+                deleteStmt.setString(1, userId);
+                deleteStmt.executeUpdate();
+                connection.commit(); // Commit the transaction
+                return true;
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error deleting tokens: " + e.getMessage());
+                throw new SQLException("Error deleting tokens: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error deleting tokens: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
     }
 
-    private boolean deleteExpiredTokens() {
-        try (Connection connection = database.getConnection();
-             PreparedStatement deleteStmt = connection.prepareStatement(DELETE_EXPIRED_TOKEN_SQL)) {
 
-            // Execute delete statement
-            deleteStmt.executeUpdate();
-            return true;
+    private boolean deleteExpiredTokens() throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
+            try (PreparedStatement deleteStmt = connection.prepareStatement(DELETE_EXPIRED_TOKEN_SQL)) {
+                deleteStmt.executeUpdate();
+                connection.commit(); // Commit the transaction
+                return true;
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error deleting expired tokens: " + e.getMessage());
+                throw new SQLException("Error deleting expired tokens: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error deleting expired tokens: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
     }
 
-    public boolean authenticateToken(String token) {
+
+    public boolean authenticateToken(String token) throws SQLException {
         // First, delete expired tokens
         if (!deleteExpiredTokens()) {
             return false; // Return false if failed to delete expired tokens
@@ -135,10 +157,13 @@ public class SessionRepository_db implements SessionRepository {
             try (ResultSet resultSet = authStmt.executeQuery()) {
                 // Return true if the token is found
                 return resultSet.next();
+            } catch (SQLException e) {
+                System.out.println("Error during token authentication: " + e.getMessage());
+                throw new SQLException("Error during token authentication: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error during token authentication: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
     }
 

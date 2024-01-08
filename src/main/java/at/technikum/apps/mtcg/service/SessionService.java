@@ -1,12 +1,14 @@
 package at.technikum.apps.mtcg.service;
 
+import at.technikum.apps.mtcg.customExceptions.NotFoundException;
+import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.TokenRequest;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.session.SessionRepository;
-import at.technikum.apps.mtcg.repository.session.SessionRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository_db;
+import at.technikum.server.http.Request;
 
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -20,7 +22,26 @@ public class SessionService {
         this.sessionRepository = sessionRepository;
     }
 
-    public Optional<String> getToken(TokenRequest tokenRequest) {
+    public User authenticateRequest(Request request) throws UnauthorizedException, NotFoundException, SQLException {
+        String authHeader = request.getAuthenticationHeader();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("No token provided");
+        }
+        String token = authHeader.split("\\s+")[1];
+
+        if (!authenticateToken(token)) {
+            throw new UnauthorizedException("Invalid token");
+        }
+
+        Optional<User> userOpt = getUserByToken(token);
+        if (userOpt.isEmpty()) {
+            throw new NotFoundException("User does not exist");
+        }
+
+        return userOpt.get();
+    }
+
+    public Optional<String> getToken(TokenRequest tokenRequest) throws SQLException {
         Optional<User> userOptional = userRepository.findByUsername(tokenRequest.getUsername());
 
         if (userOptional.isPresent() && Objects.equals(userOptional.get().getPassword(), tokenRequest.getPassword())) {
@@ -36,32 +57,11 @@ public class SessionService {
     }
 
 
-    public boolean authenticateToken(String token) {
+    public boolean authenticateToken(String token) throws SQLException {
         return sessionRepository.authenticateToken(token);
     }
 
-    public boolean isAdmin(String token) {
-        Optional<User> user = sessionRepository.findByToken(token);
-        if (user.isPresent()) {
-            return user.get().isAdmin();
-        }
-        return false;
-    }
-
-    public boolean matchRoute(String username, String token) {
-        Optional<User> userByUsername = userRepository.findByUsername(username);
-        Optional<User> userByToken = sessionRepository.findByToken(token);
-
-        if (!userByUsername.isPresent() || !userByToken.isPresent()) {
-            // One of the Optionals is empty, so no match
-            return false;
-        }
-
-        // Both Optionals have a value; compare the user IDs
-        return userByUsername.get().getId().equals(userByToken.get().getId());
-    }
-
-    public Optional<User> getUserByToken(String token) {
+    public Optional<User> getUserByToken(String token) throws SQLException {
         return sessionRepository.findByToken(token);
     }
 

@@ -3,7 +3,6 @@ package at.technikum.apps.mtcg.service;
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
-import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
 
 import java.sql.SQLException;
 import java.util.Objects;
@@ -51,7 +50,7 @@ public class BattleService {
 
             // If no player joins in 1 minute, delete the battle
             battlesWaiting.remove(battleId);
-            return null; // Indicate that the battle was cancelled
+            return new BattleResult(battleId, player, "no_opponent");
         }
     }
 

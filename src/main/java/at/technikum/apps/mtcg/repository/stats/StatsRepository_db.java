@@ -17,7 +17,7 @@ public class StatsRepository_db implements StatsRepository {
 
     //IMPLEMENTATIONS
     @Override
-    public int getUserWins(String id) {
+    public int getUserWins(String id) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_WINS_SQL)) {
 
@@ -26,15 +26,19 @@ public class StatsRepository_db implements StatsRepository {
                 if (resultSet.next()) {
                     return resultSet.getInt("wins");
                 }
+            } catch (SQLException e) {
+                System.out.println("Error during getting wins: " + e.getMessage());
+                throw new SQLException("Error during getting wins: " + e);
             }
         } catch (SQLException e) {
-            System.out.println(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return 0;
     }
 
     @Override
-    public int getUserBattles(String id) {
+    public int getUserBattles(String id) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BATTLES_SQL)) {
 
@@ -44,9 +48,13 @@ public class StatsRepository_db implements StatsRepository {
                 if (resultSet.next()) {
                     return resultSet.getInt("battles");
                 }
+            } catch (SQLException e) {
+                System.out.println("Error during getting Battles: " + e.getMessage());
+                throw new SQLException("Error during getting Battles: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println(e);
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return 0;
     }

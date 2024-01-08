@@ -24,7 +24,7 @@ public class TradingRepository_db implements TradingRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public Optional<TradeRequest> getTradeById(String id) {
+    public Optional<TradeRequest> getTradeById(String id) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_TRADE_BY_ID_SQL)) {
 
@@ -37,35 +37,50 @@ public class TradingRepository_db implements TradingRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing getTradeById: " + e.getMessage());
+                throw new SQLException("Error executing getTradeById: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean createTrade(TradeRequest tradeRequest, String userId) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement createTradeStatement = connection.prepareStatement(SAVE_TRADE_SQL)) {
+    public boolean createTrade(TradeRequest tradeRequest, String userId) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            createTradeStatement.setString(1, tradeRequest.getId());
-            createTradeStatement.setString(2, userId);
-            createTradeStatement.setString(3, tradeRequest.getCardToTrade());
-            createTradeStatement.setString(4, tradeRequest.getType());
-            createTradeStatement.setInt(5, tradeRequest.getMinimumDamage());
+            try (PreparedStatement createTradeStatement = connection.prepareStatement(SAVE_TRADE_SQL)) {
+                createTradeStatement.setString(1, tradeRequest.getId());
+                createTradeStatement.setString(2, userId);
+                createTradeStatement.setString(3, tradeRequest.getCardToTrade());
+                createTradeStatement.setString(4, tradeRequest.getType());
+                createTradeStatement.setInt(5, tradeRequest.getMinimumDamage());
 
-            int affectedRows = createTradeStatement.executeUpdate();
+                int affectedRows = createTradeStatement.executeUpdate();
 
-            return affectedRows == 1;
+                if (affectedRows == 1) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during trade creation: " + e.getMessage());
+                throw new SQLException("Error during trade creation: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error during trade creation: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
     }
 
+
     @Override
-    public TradeRequest[] getAllTrades() {
+    public TradeRequest[] getAllTrades() throws SQLException {
         List<TradeRequest> trades = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -76,16 +91,20 @@ public class TradingRepository_db implements TradingRepository {
                     TradeRequest trade = convertResultSetToTradeRequest(resultSet);
                     trades.add(trade);
                 }
+            } catch (SQLException e) {
+                System.out.println("Error during getting all trades: " + e.getMessage());
+                throw new SQLException("Error during getting all trades: " + e);
             }
         } catch (SQLException e) {
-            System.out.println("Error retrieving all trades: " + e.getMessage());
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
 
         return trades.toArray(new TradeRequest[0]);
     }
 
     @Override
-    public boolean isUserTrade(String userId, String tradingId) {
+    public boolean isUserTrade(String userId, String tradingId) throws SQLException {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(CHECK_TRADE_OF_USER_SQL)) {
 
@@ -97,29 +116,45 @@ public class TradingRepository_db implements TradingRepository {
                     // If the count is greater than 0, the card is in the stack
                     return resultSet.getInt(1) > 0;
                 }
+            } catch (SQLException e) {
+                System.out.println("Error checking if trade is of user: " + e.getMessage());
+                throw new SQLException("Error checking if trade is of user: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error checking if trade is of user: " + e.getMessage());
-            // Optionally, handle or log the exception as appropriate for your application
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean deleteTrade(String tradingId) {
-        try (Connection connection = database.getConnection();
-             PreparedStatement createTradeStatement = connection.prepareStatement(DELETE_TRADE_SQL)) {
+    public boolean deleteTrade(String tradingId) throws SQLException {
+        try (Connection connection = database.getConnection()) {
+            connection.setAutoCommit(false); // Start transaction
 
-            createTradeStatement.setString(1, tradingId);
+            try (PreparedStatement deleteTradeStatement = connection.prepareStatement(DELETE_TRADE_SQL)) {
+                deleteTradeStatement.setString(1, tradingId);
 
-            int affectedRows = createTradeStatement.executeUpdate();
+                int affectedRows = deleteTradeStatement.executeUpdate();
 
-            return affectedRows == 1;
+                if (affectedRows == 1) {
+                    connection.commit(); // Commit the transaction
+                    return true;
+                } else {
+                    connection.rollback(); // Rollback the transaction
+                    return false;
+                }
+            } catch (SQLException e) {
+                connection.rollback(); // Rollback the transaction
+                System.out.println("Error during trade deletion: " + e.getMessage());
+                throw new SQLException("Error during trade deletion: " + e.getMessage());
+            }
         } catch (SQLException e) {
-            System.out.println("Error during trade deletion: " + e.getMessage());
-            return false;
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
     }
+
 
     private TradeRequest convertResultSetToTradeRequest(ResultSet resultSet) throws SQLException {
         TradeRequest trade = new TradeRequest();

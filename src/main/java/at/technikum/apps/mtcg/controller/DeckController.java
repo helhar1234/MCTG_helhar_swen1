@@ -1,8 +1,11 @@
 package at.technikum.apps.mtcg.controller;
 
 
+import at.technikum.apps.mtcg.customExceptions.NotFoundException;
+import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.DeckService;
 import at.technikum.apps.mtcg.service.SessionService;
@@ -13,7 +16,7 @@ import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.Optional;
+import java.sql.SQLException;
 
 public class DeckController extends Controller {
     public boolean supports(String route) {
@@ -44,7 +47,7 @@ public class DeckController extends Controller {
     private final DeckService deckService;
 
 
-    public DeckController( DeckService deckService, SessionService sessionService, UserService userService, CardService cardService) {
+    public DeckController(DeckService deckService, SessionService sessionService, UserService userService, CardService cardService) {
         this.deckService = deckService;
         this.sessionService = sessionService;
         this.userService = userService;
@@ -53,58 +56,38 @@ public class DeckController extends Controller {
 
     private Response createUserDeck(Request request) {
         try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
-
-            // Authenticate the token and get the user
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
-
-            Optional<User> user = sessionService.getUserByToken(token);
-            if (user.isEmpty()) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
-            }
-
-            // Extract card IDs from the request
+            User user = sessionService.authenticateRequest(request);
             ObjectMapper objectMapper = new ObjectMapper();
             String[] cardIds = objectMapper.readValue(request.getBody(), String[].class);
+
             if (cardIds == null || cardIds.length != 4) {
-                return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Bad Request: Exactly four card IDs are required");
+                return ResponseHelper.badRequestResponse("Exactly four card IDs are required");
             }
 
-            // Check if each card is in the user's stack
             for (String cardId : cardIds) {
-                boolean inStack = cardService.isCardInStack(user.get().getId(), cardId);
-                if (!inStack) {
-                    return new Response(HttpStatus.FORBIDDEN, HttpContentType.TEXT_PLAIN, "Forbidden: One or more cards do not belong to the user");
-                }
-            }
-            boolean isReset = deckService.resetDeck(user.get().getId());
-            if (!isReset) {
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal Server Error: Unable to update the deck");
-            }
-
-            // Add cards to the user's deck
-            for (String cardId : cardIds) {
-                boolean added = deckService.addCardToDeck(user.get().getId(), cardId);
-                if (!added) {
-                    // Handle the case where adding a card to the deck fails
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal Server Error: Unable to update the deck");
+                if (!cardService.isCardInStack(user.getId(), cardId)) {
+                    return ResponseHelper.forbiddenResponse("One or more cards do not belong to the user");
                 }
             }
 
-            return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, "The deck has been successfully configured");
+            boolean isDeckReset = deckService.resetDeck(user.getId());
+            boolean areCardsAdded = true;
+            for (String cardId : cardIds) {
+                areCardsAdded &= deckService.addCardToDeck(user.getId(), cardId);
+            }
 
+            if (!isDeckReset || !areCardsAdded) {
+                return ResponseHelper.internalServerErrorResponse("Unable to update the deck");
+            }
+
+            return ResponseHelper.okResponse("The deck has been successfully configured");
+
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (SQLException e) {
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Error creating user deck: " + e.getMessage());
-            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error processing deck creation request");
+            return ResponseHelper.badRequestResponse("Error processing deck creation request: " + e.getMessage());
         }
     }
 
@@ -112,48 +95,31 @@ public class DeckController extends Controller {
     private Response getUserDeck(Request request, String queryParams) {
         boolean isPlainFormat = queryParams.equals("format=plain");
         try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
+            User user = sessionService.authenticateRequest(request);
 
-            // Authenticate the token and get the user
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
-
-            Optional<User> user = sessionService.getUserByToken(token);
-            if (user.isEmpty()) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
-            }
-
-            // Retrieve the user's cards
-            Card[] cards = deckService.getUserDeckCards(user.get().getId());
+            Card[] cards = deckService.getUserDeckCards(user.getId());
             if (cards == null || cards.length == 0) {
-                // The user exists but has no cards
-                return new Response(HttpStatus.NO_CONTENT, HttpContentType.TEXT_PLAIN, "The request was fine, but the user doesn't have any cards");
+                return ResponseHelper.noContentResponse("The user doesn't have any cards");
             }
 
             if (isPlainFormat) {
-                // Return a plain text representation of the deck
                 String plainDeck = convertDeckToPlainText(cards);
-                return new Response(HttpStatus.OK, HttpContentType.TEXT_PLAIN, plainDeck);
+                return ResponseHelper.okResponse(plainDeck, HttpContentType.TEXT_PLAIN);
             } else {
-                // Return the default JSON representation
                 ObjectMapper objectMapper = new ObjectMapper();
                 String deckJson = objectMapper.writeValueAsString(cards);
-                return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, deckJson);
+                return ResponseHelper.okResponse(deckJson, HttpContentType.APPLICATION_JSON);
             }
 
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (SQLException e) {
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Error retrieving user's cards: " + e.getMessage());
-            return new Response(HttpStatus.BAD_REQUEST, HttpContentType.TEXT_PLAIN, "Error retrieving user's cards");
+            return ResponseHelper.badRequestResponse("Error retrieving user's cards: " + e.getMessage());
         }
     }
+
 
     private String convertDeckToPlainText(Card[] deckCards) {
         // Convert the array of Cards into a plain text string

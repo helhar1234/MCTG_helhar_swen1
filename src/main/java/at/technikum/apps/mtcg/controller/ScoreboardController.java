@@ -1,6 +1,10 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.customExceptions.NotFoundException;
+import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserStats;
+import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.ScoreboardService;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.UserService;
@@ -9,6 +13,8 @@ import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.sql.SQLException;
 
 public class ScoreboardController extends Controller {
     @Override
@@ -39,35 +45,29 @@ public class ScoreboardController extends Controller {
 
     private Response getScoreboard(Request request) {
         try {
-            // Extract the token from the Authorization header
-            String authHeader = request.getAuthenticationHeader();
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: No token provided");
-            }
-            String[] authParts = authHeader.split("\\s+");
-            String token = authParts[1];
-
-            // Authenticate the token
-            boolean isAuthenticated = sessionService.authenticateToken(token);
-            if (!isAuthenticated) {
-                return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: Invalid token");
-            }
+            // Authenticate the user
+            User user = sessionService.authenticateRequest(request);
 
             // Retrieve the scoreboard
             UserStats[] scoreboard = scoreboardService.getScoreboard();
             if (scoreboard == null) {
                 // Handle the case where scoreboard is null
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing scoreboard.");
+                return ResponseHelper.internalServerErrorResponse("Internal server error while processing scoreboard.");
             }
 
-            // Respond with the scoreboard
+            // Respond with the scoreboard in JSON format
             ObjectMapper objectMapper = new ObjectMapper();
             String scoreboardJson = objectMapper.writeValueAsString(scoreboard);
-            return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, scoreboardJson);
+            return ResponseHelper.okResponse(scoreboardJson, HttpContentType.APPLICATION_JSON);
 
+        } catch (UnauthorizedException | NotFoundException e) {
+            return ResponseHelper.unauthorizedResponse(e.getMessage());
+        } catch (SQLException e) {
+            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Error retrieving scoreboard: " + e.getMessage());
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, HttpContentType.TEXT_PLAIN, "Internal server error while processing scoreboard.");
+            return ResponseHelper.internalServerErrorResponse("Internal server error while processing scoreboard: " + e.getMessage());
         }
     }
+
 }

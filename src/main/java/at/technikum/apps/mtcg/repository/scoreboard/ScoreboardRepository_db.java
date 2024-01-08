@@ -19,7 +19,7 @@ public class ScoreboardRepository_db implements ScoreboardRepository {
     // IMPLEMENTATIONS
 
     @Override
-    public UserStats[] getScoreboard() {
+    public UserStats[] getScoreboard() throws SQLException {
         List<UserStats> scoreboard = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -31,10 +31,13 @@ public class ScoreboardRepository_db implements ScoreboardRepository {
                     int eloRating = resultSet.getInt("elorating");
                     scoreboard.add(new UserStats(username, eloRating));
                 }
+            } catch (SQLException e) {
+                System.out.println("Error retrieving scoreboard: " + e.getMessage());
+                throw new SQLException("Error retrieving scoreboard: " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Error retrieving scoreboard: " + e.getMessage());
-            return new UserStats[0]; // Return an empty array in case of an exception
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new SQLException("Database connection error: " + e);
         }
 
         return scoreboard.toArray(new UserStats[0]);

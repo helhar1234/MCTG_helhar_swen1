@@ -49,7 +49,7 @@ public class Injector {
         TransactionsService transactionsService = new TransactionsService(cardRepository, userRepository, packageRepository);
 
         // Battle-Logik und Battle-Warteschlange initialisieren
-        BattleLogic battleLogic = new BattleLogic();
+        BattleLogic battleLogic = new BattleLogic(battleRepository, userRepository, cardRepository);
         ConcurrentHashMap<String, BattleResult> battlesWaiting = new ConcurrentHashMap<>();
         BattleService battleService = new BattleService(battleRepository, battleLogic, battlesWaiting);
 
