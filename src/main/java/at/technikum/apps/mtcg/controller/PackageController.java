@@ -1,9 +1,6 @@
 package at.technikum.apps.mtcg.controller;
 
-import at.technikum.apps.mtcg.customExceptions.NotFoundException;
-import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.PackageCard;
-import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.PackageService;
@@ -12,11 +9,8 @@ import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
 // TODO: MAKE TRANSACTIONS CONTROLLER SEPERATE
@@ -52,48 +46,17 @@ public class PackageController extends Controller {
 
 
     private Response createPackage(Request request) {
+        PackageCard[] packageCards;
         try {
-            // Deserialize the request body to PackageCard[]
             ObjectMapper objectMapper = new ObjectMapper();
-            PackageCard[] packageCards = objectMapper.readValue(request.getBody(), PackageCard[].class);
-
-            // Check if there are exactly 5 cards in the package
-            if (packageCards.length != 5) {
-                return ResponseHelper.conflictResponse("A package must contain exactly 5 cards");
-            }
-
-            // Check for duplicate or existing cards
-            Set<String> cardIds = new HashSet<>();
-            for (PackageCard card : packageCards) {
-                if (!cardIds.add(card.getId()) || cardService.findCardById(card.getId()).isPresent()) {
-                    return ResponseHelper.conflictResponse("Duplicate or existing cards found in the package");
-                }
-            }
-
-            // Authenticate the user and check if they are admin
-            User user = sessionService.authenticateRequest(request);
-            if (!user.isAdmin()) {
-                return ResponseHelper.forbiddenResponse("User is not an admin");
-            }
-
-            // Attempt to create a package
-            boolean isPackageSaved = packageService.savePackage(packageCards);
-            if (!isPackageSaved) {
-                return ResponseHelper.conflictResponse("At least one card in the package already exists");
-            }
-
-            // Package created successfully
-            return ResponseHelper.createdResponse("Package and cards created");
-
-        } catch (UnauthorizedException | NotFoundException e) {
-            return ResponseHelper.unauthorizedResponse(e.getMessage());
-        } catch (SQLException e) {
-            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseHelper.internalServerErrorResponse("Runtime error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseHelper.internalServerErrorResponse("Unexpected error: " + e.getMessage());
+            packageCards = objectMapper.readValue(request.getBody(), PackageCard[].class);
+        } catch (JsonProcessingException e) {
+            return ResponseHelper.badRequestResponse("Error parsing package data: " + e.getMessage());
         }
+
+        boolean isPackageSaved = packageService.savePackage(request, packageCards);
+        return ResponseHelper.createdResponse("Package and cards created");
+
     }
 
 

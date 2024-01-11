@@ -1,9 +1,11 @@
 package at.technikum.apps.mtcg.repository.user;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
+import at.technikum.server.http.HttpStatus;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -34,7 +36,7 @@ public class UserRepository_db implements UserRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public Optional<User> saveUser(User user) throws SQLException {
+    public Optional<User> saveUser(User user) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -62,19 +64,19 @@ public class UserRepository_db implements UserRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during user save: " + e.getMessage());
-                throw new SQLException("Error during user save: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during user save: " + e.getMessage());
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty(); // Return empty if failed
     }
 
 
     @Override
-    public boolean isUsernameExists(String username) throws SQLException {
+    public boolean isUsernameExists(String username) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(SEARCH_USERNAME_SQL)) {
 
@@ -85,17 +87,17 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing isUsernameExists: " + e.getMessage());
-                throw new SQLException("Error executing isUsernameExists: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error executing isUsernameExists: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public Optional<User> findByUsername(String username) throws SQLException {
+    public Optional<User> findByUsername(String username) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_USER_SQL)) {
 
@@ -108,18 +110,18 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findByUsername: " + e.getMessage());
-                throw new SQLException("Error executing findByUsername: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error executing findByUsername: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
 
     @Override
-    public UserData updateUserData(String id, UserData userData) throws SQLException {
+    public UserData updateUserData(String id, UserData userData) {
         StringBuilder sql = new StringBuilder("UPDATE userdata SET ");
         List<Object> parameters = new ArrayList<>();
         if (userData.getName() != null) {
@@ -166,17 +168,17 @@ public class UserRepository_db implements UserRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error updating user data: " + e.getMessage());
-                throw new SQLException("Error updating user data: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating user data: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e.getMessage());
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
         }
     }
 
 
     @Override
-    public boolean updateCoins(String userId, int price) throws SQLException {
+    public boolean updateCoins(String userId, int price) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -196,17 +198,17 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error updating coins: " + e.getMessage());
-                throw new SQLException("Error updating coins: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating coins: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e.getMessage());
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
         }
     }
 
 
     @Override
-    public boolean addCardToStack(String userId, Card card) throws SQLException {
+    public boolean addCardToStack(String userId, Card card) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -225,17 +227,17 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error adding card to user's stack: " + e.getMessage());
-                throw new SQLException("Error adding card to user's stack: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error adding card to user's stack: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e.getMessage());
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
         }
     }
 
 
     @Override
-    public Optional<User> findUserById(String id) throws SQLException {
+    public Optional<User> findUserById(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_USER_BY_ID_SQL)) {
 
@@ -248,17 +250,17 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing findUserById: " + e.getMessage());
-                throw new SQLException("Error executing findUserById: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error executing findUserById: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e.getMessage());
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
         }
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
     @Override
-    public boolean updateELO(String userId, int eloToAdd) throws SQLException {
+    public boolean updateELO(String userId, int eloToAdd) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -277,18 +279,16 @@ public class UserRepository_db implements UserRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error updating elo: " + e.getMessage());
-                throw new SQLException("Error updating elo: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating elo: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e.getMessage());
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
         }
     }
 
 
     private UserData convertResultSetToUserData(ResultSet resultSet) throws SQLException {
-        // Implement this method to convert a ResultSet to a UserData object.
-        // Extract values from the resultSet and populate a new UserData object.
         UserData userData = new UserData();
         userData.setName(resultSet.getString("name"));
         userData.setBio(resultSet.getString("bio"));

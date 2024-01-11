@@ -7,7 +7,6 @@ import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,7 +30,7 @@ public class BattleLogic {
         this.cardRepository = cardRepository;
     }
 
-    public BattleResult performBattle(String battleId, User playerA, User playerB) throws SQLException {
+    public BattleResult performBattle(String battleId, User playerA, User playerB) {
         boolean started = battleRepository.startBattle(battleId, playerA.getId(), playerB.getId());
         if (!started) {
             battleRepository.addToLog(battleId, "Failed to start the battle.\n");
@@ -118,15 +117,15 @@ public class BattleLogic {
         return battleRepository.findBattleById(battleId).orElse(null);
     }
 
-    private void logDeckState(String state, User player, List<Card> deck, String battleId) throws SQLException {
+    private void logDeckState(String state, User player, List<Card> deck, String battleId) {
         StringBuilder log = new StringBuilder(state + " deck state for " + player.getUsername() + ": ");
         for (Card card : deck) {
             log.append(card.getName()).append(", ");
         }
-        battleRepository.addToLog(battleId, log.toString() + "\n");
+        battleRepository.addToLog(battleId, log + "\n");
     }
 
-    private void saveDeckToStack(User player, List<Card> deck, String battleId) throws SQLException {
+    private void saveDeckToStack(User player, List<Card> deck, String battleId) {
         for (Card card : deck) {
             if (!cardRepository.isCardInStack(player.getId(), card.getId())) {
                 cardRepository.addCardToStack(player.getId(), card.getId());

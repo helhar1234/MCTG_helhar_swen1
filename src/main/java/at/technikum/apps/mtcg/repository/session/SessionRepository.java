@@ -2,17 +2,16 @@ package at.technikum.apps.mtcg.repository.session;
 
 import at.technikum.apps.mtcg.entity.User;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 public interface SessionRepository {
-    Optional<String> findTokenByUserId(String userId) throws SQLException;
+    Optional<String> findTokenByUserId(String userId);
 
-    boolean deleteToken(String userId) throws SQLException;
+    boolean deleteToken(String userId);
 
-    Optional<User> findByToken(String token) throws SQLException;
+    Optional<User> findByToken(String token);
 
-    Optional<String> generateToken(User user) throws SQLException;
+    Optional<String> generateToken(User user);
 
-    boolean authenticateToken(String token) throws SQLException;
+    boolean authenticateToken(String token);
 }

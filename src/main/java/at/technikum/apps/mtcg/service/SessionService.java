@@ -1,14 +1,13 @@
 package at.technikum.apps.mtcg.service;
 
-import at.technikum.apps.mtcg.customExceptions.NotFoundException;
-import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.entity.TokenRequest;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.session.SessionRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
+import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -22,26 +21,26 @@ public class SessionService {
         this.sessionRepository = sessionRepository;
     }
 
-    public User authenticateRequest(Request request) throws UnauthorizedException, NotFoundException, SQLException {
+    public User authenticateRequest(Request request) {
         String authHeader = request.getAuthenticationHeader();
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedException("No token provided");
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "No token provided");
         }
         String token = authHeader.split("\\s+")[1];
 
         if (!authenticateToken(token)) {
-            throw new UnauthorizedException("Invalid token");
+            throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
         }
 
         Optional<User> userOpt = getUserByToken(token);
         if (userOpt.isEmpty()) {
-            throw new NotFoundException("User does not exist");
+            throw new HttpStatusException(HttpStatus.NOT_FOUND, "User does not exist");
         }
 
         return userOpt.get();
     }
 
-    public Optional<String> getToken(TokenRequest tokenRequest) throws SQLException {
+    public Optional<String> getToken(TokenRequest tokenRequest) {
         Optional<User> userOptional = userRepository.findByUsername(tokenRequest.getUsername());
 
         if (userOptional.isPresent() && Objects.equals(userOptional.get().getPassword(), tokenRequest.getPassword())) {
@@ -57,11 +56,11 @@ public class SessionService {
     }
 
 
-    public synchronized boolean authenticateToken(String token) throws SQLException {
+    public boolean authenticateToken(String token) {
         return sessionRepository.authenticateToken(token);
     }
 
-    public Optional<User> getUserByToken(String token) throws SQLException {
+    public Optional<User> getUserByToken(String token) {
         return sessionRepository.findByToken(token);
     }
 

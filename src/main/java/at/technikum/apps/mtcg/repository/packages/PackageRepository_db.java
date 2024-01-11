@@ -1,8 +1,10 @@
 package at.technikum.apps.mtcg.repository.packages;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.Package;
+import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,7 +29,7 @@ public class PackageRepository_db implements PackageRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public boolean savePackage(String id) throws SQLException {
+    public boolean savePackage(String id) {
         boolean success = false;
 
         try (Connection connection = database.getConnection()) {
@@ -51,18 +53,18 @@ public class PackageRepository_db implements PackageRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during package save: " + e.getMessage());
-                throw new SQLException("Error during package save: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during package save: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return success;
     }
 
 
     @Override
-    public boolean addCardToPackage(String packageId, String cardId) throws SQLException {
+    public boolean addCardToPackage(String packageId, String cardId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -82,17 +84,17 @@ public class PackageRepository_db implements PackageRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error connecting card to package: " + e.getMessage());
-                throw new SQLException(e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error connecting card to package: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException(e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 
 
     @Override
-    public Optional<Package> findPackageById(String id) throws SQLException {
+    public Optional<Package> findPackageById(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_PACKAGE_BY_ID_SQL)) {
 
@@ -106,17 +108,17 @@ public class PackageRepository_db implements PackageRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding package by ID: " + e.getMessage());
-                throw new SQLException("Error finding package by ID: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding package by ID: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public Card[] getPackageCardsById(String packageId) throws SQLException {
+    public Card[] getPackageCardsById(String packageId) {
         List<Card> cards = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -131,18 +133,18 @@ public class PackageRepository_db implements PackageRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding cards in package: " + e.getMessage());
-                throw new SQLException("Error finding cards in package: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding cards in package: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
 
         return cards.toArray(new Card[0]);
     }
 
     @Override
-    public String getFirstPackageNotPossessing(String userId) throws SQLException {
+    public String getFirstPackageNotPossessing(String userId) {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(GET_FIRST_PACKAGE_NOT_POSSESSING_SQL)) {
 
@@ -154,17 +156,17 @@ public class PackageRepository_db implements PackageRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding first package not possessing: " + e.getMessage());
-                throw new SQLException("Error finding first package not possessing: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding first package not possessing: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return null;
     }
 
     @Override
-    public Optional<Package> getAvailablePackages(String packageId) throws SQLException {
+    public Optional<Package> getAvailablePackages(String packageId) {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_AVAILABLE_PACKAGE_BY_ID_SQL)) {
 
@@ -178,17 +180,17 @@ public class PackageRepository_db implements PackageRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding package by ID: " + e.getMessage());
-                throw new SQLException("Error finding package by ID: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding package by ID: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean deletePackage(String packageId) throws SQLException {
+    public boolean deletePackage(String packageId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -207,11 +209,11 @@ public class PackageRepository_db implements PackageRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error updating package sold status: " + e.getMessage());
-                throw new SQLException("Error updating package sold status: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating package sold status: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 

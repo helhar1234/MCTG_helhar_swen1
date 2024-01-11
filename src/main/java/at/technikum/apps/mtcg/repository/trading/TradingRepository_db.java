@@ -1,7 +1,9 @@
 package at.technikum.apps.mtcg.repository.trading;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.TradeRequest;
+import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,7 +26,7 @@ public class TradingRepository_db implements TradingRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public Optional<TradeRequest> getTradeById(String id) throws SQLException {
+    public Optional<TradeRequest> getTradeById(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_TRADE_BY_ID_SQL)) {
 
@@ -37,17 +39,17 @@ public class TradingRepository_db implements TradingRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing getTradeById: " + e.getMessage());
-                throw new SQLException("Error executing getTradeById: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error executing getTradeById: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean createTrade(TradeRequest tradeRequest, String userId) throws SQLException {
+    public boolean createTrade(TradeRequest tradeRequest, String userId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -70,17 +72,17 @@ public class TradingRepository_db implements TradingRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during trade creation: " + e.getMessage());
-                throw new SQLException("Error during trade creation: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during trade creation: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 
 
     @Override
-    public TradeRequest[] getAllTrades() throws SQLException {
+    public TradeRequest[] getAllTrades() {
         List<TradeRequest> trades = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -93,18 +95,18 @@ public class TradingRepository_db implements TradingRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error during getting all trades: " + e.getMessage());
-                throw new SQLException("Error during getting all trades: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during getting all trades: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
 
         return trades.toArray(new TradeRequest[0]);
     }
 
     @Override
-    public boolean isUserTrade(String userId, String tradingId) throws SQLException {
+    public boolean isUserTrade(String userId, String tradingId) {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(CHECK_TRADE_OF_USER_SQL)) {
 
@@ -118,17 +120,17 @@ public class TradingRepository_db implements TradingRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error checking if trade is of user: " + e.getMessage());
-                throw new SQLException("Error checking if trade is of user: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error checking if trade is of user: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean deleteTrade(String tradingId) throws SQLException {
+    public boolean deleteTrade(String tradingId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -147,11 +149,11 @@ public class TradingRepository_db implements TradingRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during trade deletion: " + e.getMessage());
-                throw new SQLException("Error during trade deletion: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during trade deletion: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 

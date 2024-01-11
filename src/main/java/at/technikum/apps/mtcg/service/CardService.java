@@ -1,31 +1,44 @@
 package at.technikum.apps.mtcg.service;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.entity.Card;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.server.http.HttpStatus;
+import at.technikum.server.http.Request;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class CardService {
     private final CardRepository cardRepository;
+    private final SessionService sessionService;
 
-    public CardService(CardRepository cardRepository) {
+    public CardService(CardRepository cardRepository, SessionService sessionService) {
         this.cardRepository = cardRepository;
+        this.sessionService = sessionService;
     }
 
-    public Optional<Card> findCardById(String id) throws SQLException {
+    public Optional<Card> findCardById(String id) {
         return cardRepository.findCardById(id);
     }
 
-    public Card[] getUserCards(String userId) throws SQLException {
+    public Card[] getUserCards(String userId) {
         return cardRepository.getUserCards(userId);
     }
 
 
-    public boolean isCardInStack(String userId, String cardId) throws SQLException {
+    public boolean isCardInStack(String userId, String cardId) {
         return cardRepository.isCardInStack(userId, cardId);
     }
 
 
+    public Card[] getCards(Request request) {
+        User requester = sessionService.authenticateRequest(request);
+        Card[] cards = getUserCards(requester.getId());
+        if (cards == null || cards.length == 0) {
+            throw new HttpStatusException(HttpStatus.OK, "The user doesn't have any cards");
+        }
+        return cards;
+    }
 }

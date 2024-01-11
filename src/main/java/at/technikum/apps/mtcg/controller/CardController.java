@@ -1,9 +1,6 @@
 package at.technikum.apps.mtcg.controller;
 
-import at.technikum.apps.mtcg.customExceptions.NotFoundException;
-import at.technikum.apps.mtcg.customExceptions.UnauthorizedException;
 import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.SessionService;
@@ -12,9 +9,8 @@ import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.sql.SQLException;
 
 // TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
 // TODO: MAKE DECK CONTROLLER SEPERATE
@@ -49,27 +45,17 @@ public class CardController extends Controller {
     }
 
     private Response getUserCards(Request request) {
+        Card[] cards = cardService.getCards(request);
+        String cardsJson;
         try {
-            User user = sessionService.authenticateRequest(request);
-
-            // Retrieve the user's cards
-            Card[] cards = cardService.getUserCards(user.getId());
-            if (cards == null || cards.length == 0) {
-                return ResponseHelper.noContentResponse("The user doesn't have any cards");
-            }
-
-            // Respond with the user's cards in JSON format
             ObjectMapper objectMapper = new ObjectMapper();
-            String cardsJson = objectMapper.writeValueAsString(cards);
-            return ResponseHelper.okResponse(cardsJson, HttpContentType.APPLICATION_JSON);
-
-        } catch (UnauthorizedException | NotFoundException e) {
-            return ResponseHelper.unauthorizedResponse(e.getMessage());
-        } catch (SQLException e) {
-            return ResponseHelper.internalServerErrorResponse("Database error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseHelper.badRequestResponse("Error retrieving user's cards: " + e.getMessage());
+            cardsJson = objectMapper.writeValueAsString(cards);
+        } catch (JsonProcessingException e) {
+            return ResponseHelper.badRequestResponse("Error parsing card data: " + e.getMessage());
         }
+
+        return ResponseHelper.okResponse(cardsJson, HttpContentType.APPLICATION_JSON);
+
     }
 
 

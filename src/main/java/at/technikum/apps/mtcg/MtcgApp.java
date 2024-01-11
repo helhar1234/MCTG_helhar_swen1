@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg;
 
 import at.technikum.apps.mtcg.controller.*;
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.server.ServerApplication;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
@@ -69,7 +70,13 @@ public class MtcgApp implements ServerApplication {
             }
 
             if (selectedController != null && selectedController.supports(request.getRoute())) {
-                return selectedController.handle(request);
+                try {
+                    return selectedController.handle(request);
+                } catch (HttpStatusException e) {
+                    return new Response(e.getStatus(), HttpContentType.TEXT_PLAIN, e.getMessage());
+                }
+
+
             } else {
                 return new Response(HttpStatus.NOT_FOUND, HttpContentType.TEXT_PLAIN, "Route " + request.getRoute() + " not found in app!");
             }

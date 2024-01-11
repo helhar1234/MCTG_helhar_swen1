@@ -1,10 +1,12 @@
 package at.technikum.apps.mtcg.service;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
+import at.technikum.server.http.HttpStatus;
+import at.technikum.server.http.Request;
 
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,14 +17,18 @@ public class BattleService {
     private final BattleRepository battleRepository;
     private final BattleLogic battleLogic;
     private final ConcurrentHashMap<String, BattleResult> battlesWaiting;
+    private final SessionService sessionService;
+    private final DeckService deckService;
 
-    public BattleService(BattleRepository battleRepository, BattleLogic battleLogic, ConcurrentHashMap<String, BattleResult> battlesWaiting) {
+    public BattleService(BattleRepository battleRepository, BattleLogic battleLogic, ConcurrentHashMap<String, BattleResult> battlesWaiting, SessionService sessionService, DeckService deckService) {
         this.battleRepository = battleRepository;
         this.battleLogic = battleLogic;
         this.battlesWaiting = battlesWaiting;
+        this.sessionService = sessionService;
+        this.deckService = deckService;
     }
 
-    public BattleResult battle(User player) throws SQLException {
+    public BattleResult start(User player) {
         // Find an open battle
         Optional<BattleResult> openBattle = findOpenBattle();
 
@@ -63,7 +69,7 @@ public class BattleService {
         return Optional.empty();
     }
 
-    private BattleResult waitForBattleCompletion(String battleId) throws SQLException {
+    private BattleResult waitForBattleCompletion(String battleId) {
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 60000) { // Wait up to 1 minute
             Optional<BattleResult> updatedBattle = null;
@@ -73,6 +79,20 @@ public class BattleService {
             }
         }
         return null; // Return null if the battle does not complete in time
+    }
+
+    public BattleResult battle(Request request) {
+        User requester = sessionService.authenticateRequest(request);
+
+        if (!deckService.hasDeckSet(requester.getId())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Player " + requester.getUsername() + " has no deck set up");
+        }
+
+        BattleResult battleResult = start(requester);
+        if (battleResult.getStatus().equals("no_opponent")) {
+            throw new HttpStatusException(HttpStatus.OK, "No opponent found for battle - Try again later:)");
+        }
+        return battleResult;
     }
 }
 

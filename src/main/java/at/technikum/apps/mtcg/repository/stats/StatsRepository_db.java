@@ -1,6 +1,8 @@
 package at.technikum.apps.mtcg.repository.stats;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
+import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,7 +19,7 @@ public class StatsRepository_db implements StatsRepository {
 
     //IMPLEMENTATIONS
     @Override
-    public int getUserWins(String id) throws SQLException {
+    public int getUserWins(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_WINS_SQL)) {
 
@@ -28,17 +30,17 @@ public class StatsRepository_db implements StatsRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error during getting wins: " + e.getMessage());
-                throw new SQLException("Error during getting wins: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during getting wins: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return 0;
     }
 
     @Override
-    public int getUserBattles(String id) throws SQLException {
+    public int getUserBattles(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BATTLES_SQL)) {
 
@@ -50,11 +52,11 @@ public class StatsRepository_db implements StatsRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error during getting Battles: " + e.getMessage());
-                throw new SQLException("Error during getting Battles: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during getting Battles: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return 0;
     }

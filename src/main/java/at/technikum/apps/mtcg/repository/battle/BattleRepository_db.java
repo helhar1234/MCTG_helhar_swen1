@@ -1,8 +1,10 @@
 package at.technikum.apps.mtcg.repository.battle;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.server.http.HttpStatus;
 
 import java.sql.*;
 import java.util.Optional;
@@ -21,7 +23,7 @@ public class BattleRepository_db implements BattleRepository {
 
     // IMPLEMENTATIONS
     @Override
-    public Optional<BattleResult> findBattleById(String battleId) throws SQLException {
+    public Optional<BattleResult> findBattleById(String battleId) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_BATTLE_BY_ID_SQL)) {
             statement.setString(1, battleId);
@@ -68,17 +70,17 @@ public class BattleRepository_db implements BattleRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding battle by ID: " + e.getMessage());
-                throw new SQLException("Error finding battle by ID: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding battle by ID: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty();
     }
 
     @Override
-    public boolean startBattle(String battleId, String hostId, String opponentId) throws SQLException {
+    public boolean startBattle(String battleId, String hostId, String opponentId) {
 
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
@@ -98,18 +100,18 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during battle creation: " + e.getMessage());
-                throw new SQLException("Error during battle creation: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during battle creation: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean startLog(String battleId, String text) throws SQLException {
+    public boolean startLog(String battleId, String text) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -127,18 +129,18 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log creation: " + e.getMessage());
-                throw new SQLException("Error during Log creation: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Log creation: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean addToLog(String battleId, String text) throws SQLException {
+    public boolean addToLog(String battleId, String text) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -156,18 +158,18 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log addition: " + e.getMessage());
-                throw new SQLException("Error during Log addition: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Log addition: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean crownWinner(String battleId, String userId) throws SQLException {
+    public boolean crownWinner(String battleId, String userId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -185,12 +187,12 @@ public class BattleRepository_db implements BattleRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during Log addition: " + e.getMessage());
-                throw new SQLException("Error during Log addition: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Log addition: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }

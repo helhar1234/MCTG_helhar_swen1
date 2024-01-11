@@ -1,12 +1,17 @@
 package at.technikum.apps.mtcg.service;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.entity.Package;
 import at.technikum.apps.mtcg.entity.PackageCard;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
+import at.technikum.server.http.HttpStatus;
+import at.technikum.server.http.Request;
 
-import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
@@ -14,52 +19,58 @@ public class PackageService {
 
     private final CardRepository cardRepository;
     private final PackageRepository packageRepository;
+    private final SessionService sessionService;
 
-    public PackageService(CardRepository cardRepository, PackageRepository packageRepository) {
+    public PackageService(CardRepository cardRepository, PackageRepository packageRepository, SessionService sessionService) {
         this.cardRepository = cardRepository;
         this.packageRepository = packageRepository;
+        this.sessionService = sessionService;
     }
 
-    public synchronized boolean savePackage(PackageCard[] packageCards) throws SQLException {
+    public boolean savePackage(Request request, PackageCard[] packageCards) {
+        User requester = sessionService.authenticateRequest(request);
+        if (!requester.isAdmin()) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "User is not an admin");
+        }
+
+        if (packageCards.length != 5) {
+            throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "A package must contain exactly 5 cards");
+        }
+        Set<String> cardIds = new HashSet<>();
+        for (PackageCard card : packageCards) {
+            if (!cardIds.add(card.getId()) || cardRepository.findCardById(card.getId()).isPresent()) {
+                throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Duplicate or existing cards found in the package");
+            }
+        }
+
         // Generate a new package ID
         String packageId = UUID.randomUUID().toString();
 
         // Save the package - assuming savePackage returns a boolean indicating success
         boolean isPackageSaved = packageRepository.savePackage(packageId);
-        if (!isPackageSaved) {
-            return false;
-        }
 
         // Iterate over the cards array and save each card and add it to the package
         for (PackageCard packageCard : packageCards) {
             // Save the card - assuming saveCard returns a boolean indicating success
             boolean isCardSaved = cardRepository.saveCard(packageCard);
-            if (!isCardSaved) {
-                // If saving any card fails, return false
-                return false;
-            }
 
             // Add the card to the package - assuming addCardToPackage returns a boolean indicating success
             boolean isAddedToPackage = packageRepository.addCardToPackage(packageId, packageCard.getId());
-            if (!isAddedToPackage) {
-                // If adding any card to the package fails, return false
-                return false;
-            }
+
         }
 
-        // If all cards are saved and added to the package successfully, return true
         return true;
     }
 
-    public Optional<Package> getPackageById(String id) throws SQLException {
+    public Optional<Package> getPackageById(String id) {
         return packageRepository.findPackageById(id);
     }
 
-    public String getRandomPackage(String userId) throws SQLException {
+    public String getRandomPackage(String userId) {
         return packageRepository.getFirstPackageNotPossessing(userId);
     }
 
-    public Optional<Package> getAvailablePackages(String packageId) throws SQLException {
+    public Optional<Package> getAvailablePackages(String packageId) {
         return packageRepository.getAvailablePackages(packageId);
     }
 }

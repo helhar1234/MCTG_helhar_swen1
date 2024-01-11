@@ -1,8 +1,10 @@
 package at.technikum.apps.mtcg.repository.card;
 
+import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.PackageCard;
+import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,7 +33,7 @@ public class CardRepository_db implements CardRepository {
     // IMPLEMENTATIONS
 
     @Override
-    public boolean saveCard(PackageCard card) throws SQLException {
+    public boolean saveCard(PackageCard card) {
         boolean success = false;
 
         // Determine elementtype and cardtype
@@ -61,19 +63,19 @@ public class CardRepository_db implements CardRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error during card save: " + e.getMessage());
-                throw new SQLException("Error during card save: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during card save: " + e);
             }
             connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return success;
     }
 
 
     @Override
-    public Optional<Card> findCardById(String id) throws SQLException {
+    public Optional<Card> findCardById(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_CARD_BY_ID_SQL)) {
 
@@ -87,18 +89,18 @@ public class CardRepository_db implements CardRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding card by ID: " + e.getMessage());
-                throw new SQLException("Error finding card by ID: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding card by ID: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty();
     }
 
 
     @Override
-    public Card[] getUserCards(String userId) throws SQLException {
+    public Card[] getUserCards(String userId) {
         List<Card> cards = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -113,18 +115,18 @@ public class CardRepository_db implements CardRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding cards of user: " + e.getMessage());
-                throw new SQLException("Error finding cards of user: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding cards of user: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
 
         return cards.toArray(new Card[0]);
     }
 
     @Override
-    public Card[] getUserDeckCards(String userId) throws SQLException {
+    public Card[] getUserDeckCards(String userId) {
         List<Card> cards = new ArrayList<>();
 
         try (Connection connection = database.getConnection();
@@ -139,18 +141,18 @@ public class CardRepository_db implements CardRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding cards of user: " + e.getMessage());
-                throw new SQLException("Error finding cards of user: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding cards of user: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
 
         return cards.toArray(new Card[0]);
     }
 
     @Override
-    public boolean isCardInStack(String userId, String cardId) throws SQLException {
+    public boolean isCardInStack(String userId, String cardId) {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(CHECK_CARD_IN_STACK_SQL)) {
 
@@ -163,17 +165,17 @@ public class CardRepository_db implements CardRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error checking if card is in stack: " + e.getMessage());
-                throw new SQLException("Error checking if card is in stack: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error checking if card is in stack: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean addCardToDeck(String userId, String cardId) throws SQLException {
+    public boolean addCardToDeck(String userId, String cardId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -193,17 +195,17 @@ public class CardRepository_db implements CardRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error connecting card to deck: " + e.getMessage());
-                throw new SQLException("Error connecting card to deck: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error connecting card to deck: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 
 
     @Override
-    public boolean resetDeck(String userId) throws SQLException {
+    public boolean resetDeck(String userId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -223,17 +225,17 @@ public class CardRepository_db implements CardRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error resetting user's deck: " + e.getMessage());
-                throw new SQLException("Error resetting user's deck: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error resetting user's deck: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 
 
     @Override
-    public boolean isCardInDeck(String userId, String cardId) throws SQLException {
+    public boolean isCardInDeck(String userId, String cardId) {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(CHECK_CARD_IN_DECK_SQL)) {
 
@@ -247,17 +249,17 @@ public class CardRepository_db implements CardRepository {
                 }
             } catch (SQLException e) {
                 System.out.println("Error checking if card is in stack: " + e.getMessage());
-                throw new SQLException("Error checking if card is in stack: " + e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error checking if card is in stack: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
     @Override
-    public boolean deleteCardFromStack(String userId, String cardId) throws SQLException {
+    public boolean deleteCardFromStack(String userId, String cardId) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
 
@@ -277,29 +279,28 @@ public class CardRepository_db implements CardRepository {
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
                 System.out.println("Error deleting card from user stack: " + e.getMessage());
-                throw new SQLException(e);
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting card from user stack: " + e);
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
-            throw new SQLException("Database connection error: " + e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 
 
     @Override
-    public boolean addCardToStack(String userId, String cardId) throws SQLException {
+    public boolean addCardToStack(String userId, String cardId) {
         try (Connection connection = database.getConnection();
              PreparedStatement addStmt = connection.prepareStatement(ADD_CARD_TO_STACK_SQL)) {
 
             addStmt.setString(1, userId);
             addStmt.setString(2, cardId);
 
-
             int affectedRows = addStmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println("Error saving card to user stack: " + e.getMessage());
-            throw new SQLException(e);
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
 
