@@ -56,10 +56,9 @@ public class TransactionsService {
         return true;
     }
 
-    public boolean makeTransaction(String packageId, Request request) {
-        User requester = sessionService.authenticateRequest(request);
+    public boolean makeTransaction(User user, String packageId) {
         if (packageId == null) {
-            packageId = packageRepository.getFirstPackageNotPossessing(requester.getId());
+            packageId = packageRepository.getFirstPackageNotPossessing(user.getId());
             if (packageId == null) {
                 throw new HttpStatusException(HttpStatus.CONFLICT, "No available packages for buying");
             }
@@ -71,10 +70,10 @@ public class TransactionsService {
             throw new HttpStatusException(HttpStatus.CONFLICT, "No available packages for buying");
         }
 
-        if (requester.getCoins() < aPackage.get().getPrice()) {
+        if (user.getCoins() < aPackage.get().getPrice()) {
             throw new HttpStatusException(HttpStatus.FORBIDDEN, "Not enough money for buying a card package");
         }
 
-        return executeTransaction(packageId, requester.getId(), aPackage.get().getPrice());
+        return executeTransaction(packageId, user.getId(), aPackage.get().getPrice());
     }
 }

@@ -1,5 +1,6 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserStats;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.ScoreboardService;
@@ -40,7 +41,8 @@ public class ScoreboardController extends Controller {
     }
 
     private Response getScoreboard(Request request) {
-        UserStats[] scoreboard = scoreboardService.getScoreboard(request);
+        User requester = sessionService.authenticateRequest(request);
+        UserStats[] scoreboard = scoreboardService.getScoreboard(requester);
         String scoreboardJson;
         try {
             ObjectMapper objectMapper = new ObjectMapper();

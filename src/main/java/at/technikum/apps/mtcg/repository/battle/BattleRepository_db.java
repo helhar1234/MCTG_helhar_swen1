@@ -63,7 +63,7 @@ public class BattleRepository_db implements BattleRepository {
                             playerB,
                             resultSet.getString("status"),
                             winner,
-                            resultSet.getTimestamp("start_time"),
+                            resultSet.getString("start_time"),
                             resultSet.getString("log_entry")
                     );
                     return Optional.of(battle);

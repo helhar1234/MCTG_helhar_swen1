@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.TradeRequest;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.*;
 import at.technikum.server.http.HttpContentType;
@@ -74,12 +75,14 @@ public class TradingController extends Controller {
 
 
     public Response deleteTrading(Request request, String tradingId) {
-        boolean isDeleted = tradingService.deleteTrade(request, tradingId);
+        User requester = sessionService.authenticateRequest(request);
+        boolean isDeleted = tradingService.deleteTrade(requester, tradingId);
         return ResponseHelper.okResponse("Trading deal successfully deleted!");
     }
 
 
     private Response createTrading(Request request) {
+        User requester = sessionService.authenticateRequest(request);
         TradeRequest tradeRequest;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -87,13 +90,14 @@ public class TradingController extends Controller {
         } catch (JsonProcessingException e) {
             return ResponseHelper.badRequestResponse("Error parsing user data: " + e.getMessage());
         }
-        boolean isCreated = tradingService.createTrade(request, tradeRequest);
+        boolean isCreated = tradingService.createTrade(requester, tradeRequest);
         return ResponseHelper.createdResponse("Trading deal successfully created!");
 
     }
 
     private Response getTradings(Request request) {
-        TradeRequest[] trades = tradingService.getAllTrades(request);
+        User requester = sessionService.authenticateRequest(request);
+        TradeRequest[] trades = tradingService.getAllTrades(requester);
         String tradesJson;
         try {
             ObjectMapper objectMapper = new ObjectMapper();

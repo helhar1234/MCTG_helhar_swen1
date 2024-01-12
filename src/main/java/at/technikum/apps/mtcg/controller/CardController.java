@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.Card;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.SessionService;
@@ -45,7 +46,8 @@ public class CardController extends Controller {
     }
 
     private Response getUserCards(Request request) {
-        Card[] cards = cardService.getCards(request);
+        User requester = sessionService.authenticateRequest(request);
+        Card[] cards = cardService.getCards(requester);
         String cardsJson;
         try {
             ObjectMapper objectMapper = new ObjectMapper();

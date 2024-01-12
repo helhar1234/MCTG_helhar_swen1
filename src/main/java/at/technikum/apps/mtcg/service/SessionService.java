@@ -15,10 +15,12 @@ import java.util.Optional;
 public class SessionService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
+    private final HashingService hashingService;
 
-    public SessionService(UserRepository userRepository, SessionRepository sessionRepository) {
+    public SessionService(UserRepository userRepository, SessionRepository sessionRepository, HashingService hashingService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
+        this.hashingService = hashingService;
     }
 
     public User authenticateRequest(Request request) {
@@ -43,17 +45,26 @@ public class SessionService {
     public Optional<String> getToken(TokenRequest tokenRequest) {
         Optional<User> userOptional = userRepository.findByUsername(tokenRequest.getUsername());
 
-        if (userOptional.isPresent() && Objects.equals(userOptional.get().getPassword(), tokenRequest.getPassword())) {
-            // Check if a token already exists for the user
-            Optional<String> existingToken = sessionRepository.findTokenByUserId(userOptional.get().getId());
-            if (existingToken.isPresent()) {
-                sessionRepository.deleteToken(userOptional.get().getId());
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String hashedPassword = user.getPassword();
+
+            // Verwenden Sie compareHash, um das eingegebene Passwort mit dem gespeicherten gehashten Passwort zu vergleichen
+            if (hashingService.compareHash(tokenRequest.getPassword(), hashedPassword)) {
+                // Check if a token already exists for the user
+                Optional<String> existingToken = sessionRepository.findTokenByUserId(user.getId());
+                if (existingToken.isPresent()) {
+                    sessionRepository.deleteToken(user.getId());
+                }
+                // Generate a new token
+                return sessionRepository.generateToken(userOptional.get());
+            } else {
+                throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Incorrect Password!");
             }
-            // Generate a new token
-            return sessionRepository.generateToken(userOptional.get());
         }
         return Optional.empty();
     }
+
 
 
     public boolean authenticateToken(String token) {

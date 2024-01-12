@@ -1,5 +1,6 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.StatsService;
@@ -41,7 +42,8 @@ public class StatsController extends Controller {
     }
 
     private Response getStats(Request request) {
-        Map<String, Object> userStats = statsService.getUserStats(request);
+        User requester = sessionService.authenticateRequest(request);
+        Map<String, Object> userStats = statsService.getUserStats(requester);
         String userStatsJson;
         try {
             ObjectMapper objectMapper = new ObjectMapper();

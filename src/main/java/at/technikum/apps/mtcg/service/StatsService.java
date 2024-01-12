@@ -24,14 +24,13 @@ public class StatsService {
         return statsRepository.getUserBattles(id);
     }
 
-    public Map<String, Object> getUserStats(Request request) {
-        User requester = sessionService.authenticateRequest(request);
+    public Map<String, Object> getUserStats(User user) {
         // Get user statistics
-        int wins = getUserWins(requester.getId());
-        int battles = getUserBattles(requester.getId());
+        int wins = getUserWins(user.getId());
+        int battles = getUserBattles(user.getId());
 
         Map<String, Object> userStats = Map.of(
-                "eloRating", requester.getEloRating(),
+                "eloRating", user.getEloRating(),
                 "wins", wins,
                 "totalBattles", battles
         );

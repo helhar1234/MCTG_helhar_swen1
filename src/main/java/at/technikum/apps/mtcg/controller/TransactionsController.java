@@ -1,6 +1,8 @@
 package at.technikum.apps.mtcg.controller;
 
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
+import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.TransactionsService;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -24,17 +26,20 @@ public class TransactionsController extends Controller {
     }
 
     private final TransactionsService transactionsService;
+    private final SessionService sessionService;
 
-    public TransactionsController(TransactionsService transactionsService) {
+    public TransactionsController(TransactionsService transactionsService, SessionService sessionService) {
         this.transactionsService = transactionsService;
+        this.sessionService = sessionService;
     }
 
     private Response buyPackage(Request request) {
+        User requester = sessionService.authenticateRequest(request);
         // Assuming request.getBody() returns the raw body content that can be cast to String
         String packageId = request.getBody();
 
         // Proceed with making the transaction after getting the package ID.
-        transactionsService.makeTransaction(packageId, request);
+        transactionsService.makeTransaction(requester, packageId);
 
         // Return an OK response indicating the package was bought successfully.
         return ResponseHelper.okResponse("Package has been successfully bought");

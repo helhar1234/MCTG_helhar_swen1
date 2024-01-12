@@ -8,7 +8,7 @@ public class BattleResult {
     private User playerB;
     private String status;
     private User winner;
-    private Timestamp start_time;
+    private String start_time;
     private String battleLog;
 
     BattleResult() {
@@ -21,7 +21,7 @@ public class BattleResult {
 
     }
 
-    public BattleResult(String id, User playerA, User playerB, String status, User winner, Timestamp start_time, String battleLog) {
+    public BattleResult(String id, User playerA, User playerB, String status, User winner, String start_time, String battleLog) {
         this.id = id;
         this.playerA = playerA;
         this.playerB = playerB;
@@ -79,11 +79,11 @@ public class BattleResult {
         this.status = status;
     }
 
-    public Timestamp getStart_time() {
+    public String getStart_time() {
         return start_time;
     }
 
-    public void setStart_time(Timestamp start_time) {
+    public void setStart_time(String start_time) {
         this.start_time = start_time;
     }
 }

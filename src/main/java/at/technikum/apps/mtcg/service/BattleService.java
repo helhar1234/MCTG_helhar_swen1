@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BattleService {
     private final BattleRepository battleRepository;
     private final BattleLogic battleLogic;
-    private final ConcurrentHashMap<String, BattleResult> battlesWaiting;
+    private final ConcurrentHashMap<String, BattleResult> battlesWaiting; // kümmert sich um mutexes selbst
     private final SessionService sessionService;
     private final DeckService deckService;
 
@@ -30,7 +30,7 @@ public class BattleService {
 
     public BattleResult start(User player) {
         // Find an open battle
-        Optional<BattleResult> openBattle = findOpenBattle();
+        Optional<BattleResult> openBattle = findOpenBattle(player);
 
         // If there is an open battle, join it
         if (openBattle.isPresent()) {
@@ -60,9 +60,9 @@ public class BattleService {
         }
     }
 
-    private Optional<BattleResult> findOpenBattle() {
+    private Optional<BattleResult> findOpenBattle(User player) {
         for (BattleResult battle : battlesWaiting.values()) {
-            if (battle.getPlayerB() == null && Objects.equals(battle.getStatus(), "waiting")) {
+            if (battle.getPlayerB() == null && Objects.equals(battle.getStatus(), "waiting") && battle.getPlayerA() != player) {
                 return Optional.of(battle);
             }
         }
@@ -81,14 +81,13 @@ public class BattleService {
         return null; // Return null if the battle does not complete in time
     }
 
-    public BattleResult battle(Request request) {
-        User requester = sessionService.authenticateRequest(request);
+    public BattleResult battle(User player) {
 
-        if (!deckService.hasDeckSet(requester.getId())) {
-            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Player " + requester.getUsername() + " has no deck set up");
+        if (!deckService.hasDeckSet(player.getId())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Player " + player.getUsername() + " has no deck set up");
         }
 
-        BattleResult battleResult = start(requester);
+        BattleResult battleResult = start(player);
         if (battleResult.getStatus().equals("no_opponent")) {
             throw new HttpStatusException(HttpStatus.OK, "No opponent found for battle - Try again later:)");
         }

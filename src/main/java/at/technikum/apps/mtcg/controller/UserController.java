@@ -3,6 +3,7 @@ package at.technikum.apps.mtcg.controller;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
+import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
@@ -45,12 +46,15 @@ public class UserController extends Controller {
     }
 
     private final UserService userService;
+    private final SessionService sessionService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, SessionService sessionService) {
         this.userService = userService;
+        this.sessionService = sessionService;
     }
 
     private Response updateUser(String username, Request request) {
+        User requester = sessionService.authenticateRequest(request);
         ObjectMapper objectMapper = new ObjectMapper();
         UserData userData;
         try {
@@ -61,28 +65,29 @@ public class UserController extends Controller {
             return ResponseHelper.badRequestResponse("Error parsing user data: " + e.getMessage());
         }
         // Proceed with update if authorized
-        UserData updatedUserData = userService.updateUserData(username, request, userData);
-
+        UserData updatedUserData = userService.updateUserData(requester, username, userData);
+        String jsonUserData;
         try {
-            String jsonUserData = objectMapper.writeValueAsString(updatedUserData);
-            return ResponseHelper.okResponse(jsonUserData, HttpContentType.APPLICATION_JSON);
+            jsonUserData = objectMapper.writeValueAsString(updatedUserData);
         } catch (JsonProcessingException e) {
             // Specific catch for JSON parsing errors
             return ResponseHelper.badRequestResponse("Error parsing user data: " + e.getMessage());
         }
+        return ResponseHelper.okResponse(jsonUserData, HttpContentType.APPLICATION_JSON);
     }
 
 
     private Response getUser(String username, Request request) {
-        Optional<User> user = userService.getUser(username, request);
+        User requester = sessionService.authenticateRequest(request);
+        Optional<User> user = userService.getUser(requester, username);
+        String userDataJson;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            String userDataJson = objectMapper.writeValueAsString(user.get());
-            return ResponseHelper.okResponse(userDataJson, HttpContentType.APPLICATION_JSON);
+            userDataJson = objectMapper.writeValueAsString(user.get());
         } catch (JsonProcessingException e) {
             return ResponseHelper.badRequestResponse("Error parsing user data: " + e.getMessage());
         }
-
+        return ResponseHelper.okResponse(userDataJson, HttpContentType.APPLICATION_JSON);
     }
 
 

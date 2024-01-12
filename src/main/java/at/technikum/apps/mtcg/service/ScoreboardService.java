@@ -15,8 +15,8 @@ public class ScoreboardService {
         this.sessionService = sessionService;
     }
 
-    public UserStats[] getScoreboard(Request request) {
-        User requester = sessionService.authenticateRequest(request);
+    public UserStats[] getScoreboard(User user) {
+        // Maybe use user for specific scoreboard Query?
         return scoreboardRepository.getScoreboard();
     }
 }

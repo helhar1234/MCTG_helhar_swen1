@@ -37,22 +37,21 @@ public class DeckService {
         return deckCards != null && deckCards.length == 4;
     }
 
-    public boolean configureDeck(Request request, String[] cardIds) {
-        User requester = sessionService.authenticateRequest(request);
+    public boolean configureDeck(User user, String[] cardIds) {
         if (cardIds == null || cardIds.length != 4) {
             throw new HttpStatusException(HttpStatus.BAD_REQUEST, "Exactly four card IDs are required");
         }
 
         for (String cardId : cardIds) {
-            if (!cardRepository.isCardInStack(requester.getId(), cardId)) {
+            if (!cardRepository.isCardInStack(user.getId(), cardId)) {
                 throw new HttpStatusException(HttpStatus.FORBIDDEN, "One or more cards do not belong to the user");
             }
         }
 
-        boolean isDeckReset = resetDeck(requester.getId());
+        boolean isDeckReset = resetDeck(user.getId());
         boolean areCardsAdded = true;
         for (String cardId : cardIds) {
-            areCardsAdded &= addCardToDeck(requester.getId(), cardId);
+            areCardsAdded &= addCardToDeck(user.getId(), cardId);
         }
 
         if (!isDeckReset || !areCardsAdded) {
@@ -62,9 +61,8 @@ public class DeckService {
         return true;
     }
 
-    public Card[] getDeck(Request request) {
-        User requester = sessionService.authenticateRequest(request);
-        Card[] cards = getUserDeckCards(requester.getId());
+    public Card[] getDeck(User user) {
+        Card[] cards = getUserDeckCards(user.getId());
         if (cards == null || cards.length == 0) {
             throw new HttpStatusException(HttpStatus.OK, "The user doesn't have any cards");
         }

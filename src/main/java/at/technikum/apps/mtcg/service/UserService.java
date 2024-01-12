@@ -14,15 +14,16 @@ import java.util.UUID;
 // TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class UserService {
     private final UserRepository userRepository;
-    private final SessionService sessionService;
+    private final HashingService hashingService;
 
-    public UserService(UserRepository userRepository, SessionService sessionService) {
+    public UserService(UserRepository userRepository, HashingService hashingService) {
         this.userRepository = userRepository;
-        this.sessionService = sessionService;
+        this.hashingService = hashingService;
     }
 
     public Optional<User> createUser(User user) {
         user.setId(UUID.randomUUID().toString());
+        user.setPassword(hashingService.encrypt(user.getPassword()));
         user.setAdmin(Objects.equals(user.getUsername(), "admin"));
         if (userRepository.isUsernameExists(user.getUsername())) {
             throw new HttpStatusException(HttpStatus.CONFLICT, "User with same username already registered");
@@ -38,19 +39,17 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public UserData updateUserData(String username, Request request, UserData userData) {
-        User requester = sessionService.authenticateRequest(request);
-        if (!requester.getUsername().equals(username) && !requester.isAdmin()) {
+    public UserData updateUserData(User user, String username, UserData userData) {
+        if (!user.getUsername().equals(username) && !user.isAdmin()) {
             throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Access denied");
         }
         return userRepository.updateUserData(userRepository.findByUsername(username).get().getId(), userData);
     }
 
-    public Optional<User> getUser(String username, Request request) {
-        User requester = sessionService.authenticateRequest(request);
-        if (!requester.getUsername().equals(username) && !requester.isAdmin()) {
+    public Optional<User> getUser(User user, String username) {
+        if (!user.getUsername().equals(username) && !user.isAdmin()) {
             throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Access denied");
         }
-        return Optional.of(requester);
+        return Optional.of(user);
     }
 }

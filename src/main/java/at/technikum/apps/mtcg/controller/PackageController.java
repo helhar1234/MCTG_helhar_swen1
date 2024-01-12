@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.PackageCard;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.PackageService;
@@ -46,6 +47,7 @@ public class PackageController extends Controller {
 
 
     private Response createPackage(Request request) {
+        User requester = sessionService.authenticateRequest(request);
         PackageCard[] packageCards;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -54,7 +56,7 @@ public class PackageController extends Controller {
             return ResponseHelper.badRequestResponse("Error parsing package data: " + e.getMessage());
         }
 
-        boolean isPackageSaved = packageService.savePackage(request, packageCards);
+        boolean isPackageSaved = packageService.savePackage(requester, packageCards);
         return ResponseHelper.createdResponse("Package and cards created");
 
     }

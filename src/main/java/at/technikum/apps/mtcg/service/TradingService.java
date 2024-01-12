@@ -30,21 +30,19 @@ public class TradingService {
         return tradingRepository.getTradeById(id);
     }
 
-    public boolean createTrade(Request request, TradeRequest tradeRequest) {
-        User requester = sessionService.authenticateRequest(request);
+    public boolean createTrade(User user, TradeRequest tradeRequest) {
 
-        if (!cardRepository.isCardInStack(requester.getId(), tradeRequest.getCardToTrade()) || cardRepository.isCardInDeck(tradeRequest.getCardToTrade(), requester.getId())) {
+        if (!cardRepository.isCardInStack(user.getId(), tradeRequest.getCardToTrade()) || cardRepository.isCardInDeck(tradeRequest.getCardToTrade(), user.getId())) {
             throw new HttpStatusException(HttpStatus.FORBIDDEN, "The deal contains a card that is not owned by the user or locked in the deck.");
         }
 
         if (tradingRepository.getTradeById(tradeRequest.getId()).isPresent()) {
             throw new HttpStatusException(HttpStatus.CONFLICT, "Conflict: A deal with this deal ID already exists.");
         }
-        return tradingRepository.createTrade(tradeRequest, requester.getId());
+        return tradingRepository.createTrade(tradeRequest, user.getId());
     }
 
-    public TradeRequest[] getAllTrades(Request request) {
-        User requester = sessionService.authenticateRequest(request);
+    public TradeRequest[] getAllTrades(User user) {
         TradeRequest[] trades = tradingRepository.getAllTrades();
         if (trades == null || trades.length == 0) {
             throw new HttpStatusException(HttpStatus.OK, "No Trading Deals");
@@ -59,7 +57,7 @@ public class TradingService {
 
             // Enrich with user details
             Optional<User> userOptional = userRepository.findUserById(trade.getUserId());
-            userOptional.ifPresent(user -> trade.setUsername(user.getUsername()));
+            userOptional.ifPresent(trader -> trade.setUsername(trader.getUsername()));
         }
 
         return trades;
@@ -69,9 +67,8 @@ public class TradingService {
         return tradingRepository.isUserTrade(userId, tradingId);
     }
 
-    public boolean deleteTrade(Request request, String tradingId) {
-        User requester = sessionService.authenticateRequest(request);
-        if (!isUserTrade(requester.getId(), tradingId)) {
+    public boolean deleteTrade(User user, String tradingId) {
+        if (!isUserTrade(user.getId(), tradingId)) {
             throw new HttpStatusException(HttpStatus.FORBIDDEN, "The deal is not owned by the user.");
         } else if (getTradeById(tradingId).isEmpty()) {
             throw new HttpStatusException(HttpStatus.NOT_FOUND, "Deal ID Not Found.");

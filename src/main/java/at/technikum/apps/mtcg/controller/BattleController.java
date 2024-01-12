@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.controller;
 
 import at.technikum.apps.mtcg.entity.BattleResult;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.BattleService;
 import at.technikum.apps.mtcg.service.DeckService;
@@ -47,7 +48,8 @@ public class BattleController extends Controller {
     }
 
     private Response battle(Request request) {
-        BattleResult battleResult = battleService.battle(request);
+        User requester = sessionService.authenticateRequest(request);
+        BattleResult battleResult = battleService.battle(requester);
         String responseBody;
         try {
             ObjectMapper objectMapper = new ObjectMapper();

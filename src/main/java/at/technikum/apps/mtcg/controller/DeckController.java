@@ -2,6 +2,7 @@ package at.technikum.apps.mtcg.controller;
 
 
 import at.technikum.apps.mtcg.entity.Card;
+import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.DeckService;
@@ -51,6 +52,7 @@ public class DeckController extends Controller {
     }
 
     private Response createUserDeck(Request request) {
+        User requester = sessionService.authenticateRequest(request);
         String[] cardIds;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -59,7 +61,7 @@ public class DeckController extends Controller {
             return ResponseHelper.badRequestResponse("Error parsing deck data: " + e.getMessage());
         }
 
-        boolean isDeckConf = deckService.configureDeck(request, cardIds);
+        boolean isDeckConf = deckService.configureDeck(requester, cardIds);
         return ResponseHelper.okResponse("The deck has been successfully configured");
 
 
@@ -68,7 +70,9 @@ public class DeckController extends Controller {
 
     private Response getUserDeck(Request request, String queryParams) {
         boolean isPlainFormat = queryParams.equals("format=plain");
-        Card[] cards = deckService.getDeck(request);
+
+        User requester = sessionService.authenticateRequest(request);
+        Card[] cards = deckService.getDeck(requester);
         ObjectMapper objectMapper = new ObjectMapper();
         String responseBody;
         HttpContentType contentType;

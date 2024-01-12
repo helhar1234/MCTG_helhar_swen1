@@ -33,9 +33,8 @@ public class CardService {
     }
 
 
-    public Card[] getCards(Request request) {
-        User requester = sessionService.authenticateRequest(request);
-        Card[] cards = getUserCards(requester.getId());
+    public Card[] getCards(User user) {
+        Card[] cards = getUserCards(user.getId());
         if (cards == null || cards.length == 0) {
             throw new HttpStatusException(HttpStatus.OK, "The user doesn't have any cards");
         }

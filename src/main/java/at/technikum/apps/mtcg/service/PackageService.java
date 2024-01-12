@@ -27,9 +27,9 @@ public class PackageService {
         this.sessionService = sessionService;
     }
 
-    public boolean savePackage(Request request, PackageCard[] packageCards) {
-        User requester = sessionService.authenticateRequest(request);
-        if (!requester.isAdmin()) {
+    public boolean savePackage(User user, PackageCard[] packageCards) {
+
+        if (!user.isAdmin()) {
             throw new HttpStatusException(HttpStatus.FORBIDDEN, "User is not an admin");
         }
 

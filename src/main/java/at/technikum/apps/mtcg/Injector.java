@@ -38,8 +38,10 @@ public class Injector {
         TradingRepository tradingRepository = new TradingRepository_db();
 
         // Services initialisieren
-        SessionService sessionService = new SessionService(userRepository, sessionRepository);
-        UserService userService = new UserService(userRepository, sessionService);
+
+        HashingService hashingService = new HashingService();
+        SessionService sessionService = new SessionService(userRepository, sessionRepository, hashingService);
+        UserService userService = new UserService(userRepository, hashingService);
         CardService cardService = new CardService(cardRepository, sessionService);
         DeckService deckService = new DeckService(cardRepository, sessionService);
         PackageService packageService = new PackageService(cardRepository, packageRepository, sessionService);
@@ -56,14 +58,14 @@ public class Injector {
         // Controller mit Services initialisieren
         List<Controller> controllerList = new ArrayList<>();
         controllerList.add(new SessionController(sessionService));
-        controllerList.add(new UserController(userService));
+        controllerList.add(new UserController(userService, sessionService));
         controllerList.add(new CardController(cardService, sessionService, userService));
         controllerList.add(new DeckController(deckService, sessionService, userService, cardService));
         controllerList.add(new PackageController(packageService, sessionService, userService, cardService));
         controllerList.add(new ScoreboardController(scoreboardService, sessionService, userService));
         controllerList.add(new StatsController(statsService, sessionService, userService));
         controllerList.add(new TradingController(tradingService, sessionService, cardService, userService, deckService));
-        controllerList.add(new TransactionsController(transactionsService));
+        controllerList.add(new TransactionsController(transactionsService, sessionService));
         controllerList.add(new BattleController(battleService, sessionService, userService, deckService));
 
         return controllerList;
