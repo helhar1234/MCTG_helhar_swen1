@@ -2,7 +2,7 @@ package at.technikum.apps.mtcg.repository.scoreboard;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
-import at.technikum.apps.mtcg.entity.UserStats;
+import at.technikum.apps.mtcg.dto.UserStats;
 import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;
@@ -16,7 +16,7 @@ public class ScoreboardRepository_db implements ScoreboardRepository {
     // DB CONNECTION
     private final Database database = new Database();
     // SQL STATEMENTS
-    private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users ORDER BY elorating DESC";
+    private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users WHERE isAdmin is false ORDER BY elorating DESC";
 
     // IMPLEMENTATIONS
 

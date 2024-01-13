@@ -2,7 +2,7 @@ package at.technikum.apps.mtcg.repository.trading;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
-import at.technikum.apps.mtcg.entity.TradeRequest;
+import at.technikum.apps.mtcg.dto.TradeRequest;
 import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;

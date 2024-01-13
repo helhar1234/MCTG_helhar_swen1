@@ -5,7 +5,6 @@ import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.server.http.HttpStatus;
-import at.technikum.server.http.Request;
 
 public class DeckService {
     private final CardRepository cardRepository;

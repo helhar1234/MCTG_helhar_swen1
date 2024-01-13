@@ -1,13 +1,12 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
+import at.technikum.apps.mtcg.dto.PackageCard;
 import at.technikum.apps.mtcg.entity.Package;
-import at.technikum.apps.mtcg.entity.PackageCard;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
 import at.technikum.server.http.HttpStatus;
-import at.technikum.server.http.Request;
 
 import java.util.HashSet;
 import java.util.Optional;

@@ -1,7 +1,5 @@
 package at.technikum.apps.mtcg.entity;
 
-import java.sql.Timestamp;
-
 public class BattleResult {
     private String id;
     private User playerA;

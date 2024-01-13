@@ -2,8 +2,8 @@ package at.technikum.apps.mtcg.repository.card;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
+import at.technikum.apps.mtcg.dto.PackageCard;
 import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.entity.PackageCard;
 import at.technikum.server.http.HttpStatus;
 
 import java.sql.Connection;
@@ -29,6 +29,7 @@ public class CardRepository_db implements CardRepository {
     private final String RESET_USER_DECK_SQL = "UPDATE user_cards SET indeck = ? WHERE user_fk = ?";
     private final String DELETE_CARD_FROM_STACK_SQL = "DELETE FROM user_cards WHERE user_fk = ? AND card_fk = ?";
     private final String ADD_CARD_TO_STACK_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
+    private final String GET_CARD_NON_POSSESSED_SQL = "SELECT * FROM cards WHERE card_id NOT IN (SELECT card_fk FROM user_cards)";
 
     // IMPLEMENTATIONS
 
@@ -302,6 +303,27 @@ public class CardRepository_db implements CardRepository {
             System.out.println("Error saving card to user stack: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
+    }
+
+    @Override
+    public Optional<Card> getCardNotPossesed() {
+        try (Connection connection = database.getConnection();
+             PreparedStatement findCardStmt = connection.prepareStatement(GET_CARD_NON_POSSESSED_SQL)) {
+
+            try (ResultSet resultSet = findCardStmt.executeQuery()) {
+                if (resultSet.next()) {
+                    Card card = convertResultSetToCard(resultSet);
+                    return Optional.of(card);
+                }
+            } catch (SQLException e) {
+                System.out.println("Error finding card non possesed card: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding non possesed card: " + e);
+            }
+        } catch (SQLException e) {
+            System.out.println("Database connection error: " + e.getMessage());
+            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
+        }
+        return Optional.empty();
     }
 
 

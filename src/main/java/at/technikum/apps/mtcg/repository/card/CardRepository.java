@@ -1,7 +1,7 @@
 package at.technikum.apps.mtcg.repository.card;
 
+import at.technikum.apps.mtcg.dto.PackageCard;
 import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.entity.PackageCard;
 
 import java.util.Optional;
 
@@ -28,4 +28,6 @@ public interface CardRepository {
     boolean deleteCardFromStack(String userId, String cardId);
 
     boolean addCardToStack(String userId, String cardId);
+
+    Optional<Card> getCardNotPossesed();
 }

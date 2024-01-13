@@ -3,7 +3,6 @@ package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.stats.StatsRepository;
-import at.technikum.server.http.Request;
 
 import java.util.Map;
 

@@ -1,8 +1,8 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
+import at.technikum.apps.mtcg.dto.TradeRequest;
 import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.entity.TradeRequest;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.trading.TradingRepository;

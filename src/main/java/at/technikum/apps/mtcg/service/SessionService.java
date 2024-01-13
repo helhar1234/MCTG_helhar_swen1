@@ -1,14 +1,13 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
-import at.technikum.apps.mtcg.entity.TokenRequest;
+import at.technikum.apps.mtcg.dto.TokenRequest;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.session.SessionRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 
-import java.util.Objects;
 import java.util.Optional;
 
 // TODO: ADD COMMENTS
@@ -58,13 +57,10 @@ public class SessionService {
                 }
                 // Generate a new token
                 return sessionRepository.generateToken(userOptional.get());
-            } else {
-                throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Incorrect Password!");
             }
         }
         return Optional.empty();
     }
-
 
 
     public boolean authenticateToken(String token) {

@@ -14,15 +14,12 @@ import java.util.Optional;
 
 public class UserRepository_db implements UserRepository {
     // DB CONNECTION
-    private Database database = new Database();
+    private final Database database = new Database();
 
     //FOR TESTING
-    public UserRepository_db(Database database) {
-        this.database = database;
-    }
-
     public UserRepository_db() {
     }
+
 
     // SQL STATEMENTS
     private final String CREATE_USER_SQL = "INSERT INTO users (user_id, username, password, isAdmin) VALUES (?,?,?,?)";

@@ -18,6 +18,8 @@ import at.technikum.apps.mtcg.repository.trading.TradingRepository;
 import at.technikum.apps.mtcg.repository.trading.TradingRepository_db;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository_db;
+import at.technikum.apps.mtcg.repository.wheel.WheelOfFortuneRepository;
+import at.technikum.apps.mtcg.repository.wheel.WheelOfFortuneRepository_db;
 import at.technikum.apps.mtcg.service.*;
 
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ public class Injector {
         ScoreboardRepository scoreboardRepository = new ScoreboardRepository_db();
         StatsRepository statsRepository = new StatsRepository_db();
         TradingRepository tradingRepository = new TradingRepository_db();
+        WheelOfFortuneRepository wheelOfFortuneRepository = new WheelOfFortuneRepository_db();
 
         // Services initialisieren
 
@@ -49,6 +52,7 @@ public class Injector {
         StatsService statsService = new StatsService(statsRepository, sessionService);
         TradingService tradingService = new TradingService(tradingRepository, cardRepository, userRepository, sessionService);
         TransactionsService transactionsService = new TransactionsService(cardRepository, userRepository, packageRepository, sessionService);
+        WheelOfFortuneService wheelOfFortuneService = new WheelOfFortuneService(wheelOfFortuneRepository, userRepository, cardRepository);
 
         // Battle-Logik und Battle-Warteschlange initialisieren
         BattleLogic battleLogic = new BattleLogic(battleRepository, userRepository, cardRepository);
@@ -67,6 +71,7 @@ public class Injector {
         controllerList.add(new TradingController(tradingService, sessionService, cardService, userService, deckService));
         controllerList.add(new TransactionsController(transactionsService, sessionService));
         controllerList.add(new BattleController(battleService, sessionService, userService, deckService));
+        controllerList.add(new WheelOfFortuneController(wheelOfFortuneService, sessionService));
 
         return controllerList;
     }

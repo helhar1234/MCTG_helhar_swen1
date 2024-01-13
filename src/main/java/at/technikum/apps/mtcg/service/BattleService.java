@@ -5,7 +5,6 @@ import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.server.http.HttpStatus;
-import at.technikum.server.http.Request;
 
 import java.util.Objects;
 import java.util.Optional;

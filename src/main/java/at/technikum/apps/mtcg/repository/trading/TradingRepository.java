@@ -1,6 +1,6 @@
 package at.technikum.apps.mtcg.repository.trading;
 
-import at.technikum.apps.mtcg.entity.TradeRequest;
+import at.technikum.apps.mtcg.dto.TradeRequest;
 
 import java.util.Optional;
 

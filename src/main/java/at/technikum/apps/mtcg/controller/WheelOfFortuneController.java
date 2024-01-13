@@ -1,16 +1,20 @@
-/*package at.technikum.apps.mtcg.controller;
+package at.technikum.apps.mtcg.controller;
 
 // TODO: implement Wheel of fortune for users -> get either a new card or coins once a day
 // PRIZES: good cards or coins (12/16)
 // LOOSERS: -5 coins (4/16)
 
-import at.technikum.apps.mtcg.service.CardService;
+import at.technikum.apps.mtcg.dto.WheelPrize;
+import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.UserService;
+import at.technikum.apps.mtcg.service.WheelOfFortuneService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WheelOfFortuneController extends Controller {
     @Override
@@ -25,7 +29,7 @@ public class WheelOfFortuneController extends Controller {
 
         if (baseRoute.equals("/wheel")) {
             switch (request.getMethod()) {
-                case "GET":
+                case "POST":
                     return getWheelPrize(request);
             }
         }
@@ -33,21 +37,24 @@ public class WheelOfFortuneController extends Controller {
     }
 
 
-    private final UserService userService;
+    private final WheelOfFortuneService wheelOfFortuneService;
     private final SessionService sessionService;
-    private final CardService cardService;
 
-    public WheelOfFortuneController() {
-
+    public WheelOfFortuneController(WheelOfFortuneService wheelOfFortuneService, SessionService sessionService) {
+        this.sessionService = sessionService;
+        this.wheelOfFortuneService = wheelOfFortuneService;
     }
 
     private Response getWheelPrize(Request request) {
-        // authenticate token
-        // ask if user has already wheeled
-        // wheel (make changes)
-        // tell player their prize
-
-
-        return new Response(HttpStatus.UNAUTHORIZED, HttpContentType.TEXT_PLAIN, "Unauthorized: User does not exist");
+        User requester = sessionService.authenticateRequest(request);
+        WheelPrize prize = wheelOfFortuneService.spin(requester);
+        String prizeJson;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            prizeJson = objectMapper.writeValueAsString(prize);
+        } catch (JsonProcessingException e) {
+            return ResponseHelper.badRequestResponse("Error parsing prize data: " + e.getMessage());
+        }
+        return ResponseHelper.okResponse(prizeJson, HttpContentType.APPLICATION_JSON);
     }
-}*/
+}

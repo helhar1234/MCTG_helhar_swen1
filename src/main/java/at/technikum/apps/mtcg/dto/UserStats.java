@@ -1,4 +1,4 @@
-package at.technikum.apps.mtcg.entity;
+package at.technikum.apps.mtcg.dto;
 
 public class UserStats {
     private String username;

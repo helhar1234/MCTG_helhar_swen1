@@ -61,9 +61,9 @@ public class MtcgApp implements ServerApplication {
                 case "tradings":
                     selectedController = getController(TradingController.class);
                     break;
-                /*case "wheel":
+                case "wheel":
                     selectedController = getController(WheelOfFortuneController.class);
-                    break;*/
+                    break;
                 default:
                     // Kein passender Controller gefunden
                     break;

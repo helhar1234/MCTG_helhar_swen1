@@ -8,7 +8,6 @@ import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.server.http.HttpStatus;
-import at.technikum.server.http.Request;
 
 import java.util.Optional;
 
