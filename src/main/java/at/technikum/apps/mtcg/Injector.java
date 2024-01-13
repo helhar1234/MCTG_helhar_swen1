@@ -6,6 +6,10 @@ import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.card.CardRepository_db;
+import at.technikum.apps.mtcg.repository.coins.CoinRepository;
+import at.technikum.apps.mtcg.repository.coins.CoinRepository_db;
+import at.technikum.apps.mtcg.repository.elo.ELORepository;
+import at.technikum.apps.mtcg.repository.elo.ELORepository_db;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository_db;
 import at.technikum.apps.mtcg.repository.scoreboard.ScoreboardRepository;
@@ -39,6 +43,8 @@ public class Injector {
         StatsRepository statsRepository = new StatsRepository_db();
         TradingRepository tradingRepository = new TradingRepository_db();
         WheelOfFortuneRepository wheelOfFortuneRepository = new WheelOfFortuneRepository_db();
+        CoinRepository coinRepository = new CoinRepository_db();
+        ELORepository eloRepository = new ELORepository_db();
 
         // Services initialisieren
 
@@ -51,11 +57,11 @@ public class Injector {
         ScoreboardService scoreboardService = new ScoreboardService(scoreboardRepository, sessionService);
         StatsService statsService = new StatsService(statsRepository, sessionService);
         TradingService tradingService = new TradingService(tradingRepository, cardRepository, userRepository, sessionService);
-        TransactionsService transactionsService = new TransactionsService(cardRepository, userRepository, packageRepository, sessionService);
-        WheelOfFortuneService wheelOfFortuneService = new WheelOfFortuneService(wheelOfFortuneRepository, userRepository, cardRepository);
+        TransactionsService transactionsService = new TransactionsService(cardRepository, userRepository, packageRepository, sessionService, coinRepository);
+        WheelOfFortuneService wheelOfFortuneService = new WheelOfFortuneService(wheelOfFortuneRepository, userRepository, cardRepository, coinRepository);
 
         // Battle-Logik und Battle-Warteschlange initialisieren
-        BattleLogic battleLogic = new BattleLogic(battleRepository, userRepository, cardRepository);
+        BattleLogic battleLogic = new BattleLogic(battleRepository, userRepository, cardRepository, eloRepository);
         ConcurrentHashMap<String, BattleResult> battlesWaiting = new ConcurrentHashMap<>();
         BattleService battleService = new BattleService(battleRepository, battleLogic, battlesWaiting, sessionService, deckService);
 

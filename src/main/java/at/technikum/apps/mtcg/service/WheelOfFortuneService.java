@@ -5,6 +5,7 @@ import at.technikum.apps.mtcg.dto.WheelPrize;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.apps.mtcg.repository.coins.CoinRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.apps.mtcg.repository.wheel.WheelOfFortuneRepository;
 import at.technikum.server.http.HttpStatus;
@@ -16,13 +17,16 @@ public class WheelOfFortuneService {
     private final WheelOfFortuneRepository wheelOfFortuneRepository;
     private final UserRepository userRepository;
     private final CardRepository cardRepository;
+    private final CoinRepository coinRepository;
 
     public WheelOfFortuneService(WheelOfFortuneRepository wheelOfFortuneRepository,
                                  UserRepository userRepository,
-                                 CardRepository cardRepository) {
+                                 CardRepository cardRepository,
+                                 CoinRepository coinRepository) {
         this.wheelOfFortuneRepository = wheelOfFortuneRepository;
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
+        this.coinRepository = coinRepository;
     }
 
     public WheelPrize spin(User user) {
@@ -77,7 +81,7 @@ public class WheelOfFortuneService {
             spinner.setCoins(0);
         } else {
             // Aktualisieren Sie die Münzen in der Datenbank
-            userRepository.updateCoins(spinner.getId(), coinChange);
+            coinRepository.updateCoins(spinner.getId(), coinChange);
             // Aktualisieren Sie den Münzstand des Benutzers im Speicher
             spinner.setCoins(newCoinAmount);
         }

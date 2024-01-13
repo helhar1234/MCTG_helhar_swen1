@@ -5,6 +5,7 @@ import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.Package;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.apps.mtcg.repository.coins.CoinRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.server.http.HttpStatus;
@@ -16,17 +17,19 @@ public class TransactionsService {
     private final UserRepository userRepository;
     private final PackageRepository packageRepository;
     private final SessionService sessionService;
+    private final CoinRepository coinRepository;
 
-    public TransactionsService(CardRepository cardRepository, UserRepository userRepository, PackageRepository packageRepository, SessionService sessionService) {
+    public TransactionsService(CardRepository cardRepository, UserRepository userRepository, PackageRepository packageRepository, SessionService sessionService, CoinRepository coinRepository) {
         this.cardRepository = cardRepository;
         this.userRepository = userRepository;
         this.packageRepository = packageRepository;
         this.sessionService = sessionService;
+        this.coinRepository = coinRepository;
     }
 
     public boolean executeTransaction(String packageId, String userId, int price) {
         // Attempt to deduct the price from the user's coins
-        boolean coinsUpdated = userRepository.updateCoins(userId, -price);
+        boolean coinsUpdated = coinRepository.updateCoins(userId, -price);
 
         if (!coinsUpdated) {
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while payment - Please try again!");
@@ -36,7 +39,7 @@ public class TransactionsService {
 
         if (cards == null || cards.length != 5) {
             // If the retrieval failed or the number of cards is not correct, reverse the coin update and return false
-            userRepository.updateCoins(userId, price); // Reverse the coin deduction since the transaction failed
+            coinRepository.updateCoins(userId, price); // Reverse the coin deduction since the transaction failed
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error retrieving Package cards - Please try again!");
         }
 
@@ -45,7 +48,7 @@ public class TransactionsService {
             boolean cardAdded = userRepository.addCardToStack(userId, card);
             if (!cardAdded) {
                 // If adding any card to the user's stack fails, reverse the coin update and return false
-                userRepository.updateCoins(userId, price); // Reverse the coin deduction since the transaction failed
+                coinRepository.updateCoins(userId, price); // Reverse the coin deduction since the transaction failed
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while adding cards to your Stack - Please try again!");
             }
         }

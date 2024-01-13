@@ -5,6 +5,7 @@ import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
+import at.technikum.apps.mtcg.repository.elo.ELORepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 
 import java.util.ArrayList;
@@ -19,15 +20,17 @@ public class BattleLogic {
     private final BattleRepository battleRepository;
     private final UserRepository userRepository;
     private final CardRepository cardRepository;
+    private final ELORepository eloRepository;
 
     private static final int MAX_ROUNDS = 100;
     private static final int ELO_WIN = 3;
     private static final int ELO_LOSS = -5;
 
-    public BattleLogic(BattleRepository battleRepository, UserRepository userRepository, CardRepository cardRepository) {
+    public BattleLogic(BattleRepository battleRepository, UserRepository userRepository, CardRepository cardRepository, ELORepository eloRepository) {
         this.battleRepository = battleRepository;
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
+        this.eloRepository = eloRepository;
     }
 
     public BattleResult performBattle(String battleId, User playerA, User playerB) {
@@ -104,8 +107,8 @@ public class BattleLogic {
             User finalLoser = finalWinner.equals(playerA) ? playerB : playerA;
             eloA += finalWinner.equals(playerA) ? ELO_WIN : ELO_LOSS;
             eloB += finalWinner.equals(playerB) ? ELO_WIN : ELO_LOSS;
-            userRepository.updateELO(playerA.getId(), eloA);
-            userRepository.updateELO(playerB.getId(), eloB);
+            eloRepository.updateELO(playerA.getId(), eloA);
+            eloRepository.updateELO(playerB.getId(), eloB);
             battleRepository.crownWinner(battleId, finalWinner.getId());
             battleRepository.addToLog(battleId, finalWinner.getUsername() + " wins the battle with final ELO: " + (finalWinner.equals(playerA) ? eloA : eloB) + "\n");
         } else {

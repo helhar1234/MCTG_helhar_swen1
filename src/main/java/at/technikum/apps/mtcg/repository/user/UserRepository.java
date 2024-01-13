@@ -17,12 +17,10 @@ public interface UserRepository {
 
     UserData updateUserData(String id, UserData userData);
 
-    boolean updateCoins(String userId, int price);
-
     boolean addCardToStack(String userId, Card card);
 
     Optional<User> findUserById(String id);
 
-    boolean updateELO(String userId, int eloToAdd);
+
 
 }

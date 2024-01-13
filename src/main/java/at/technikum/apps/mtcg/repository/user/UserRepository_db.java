@@ -16,19 +16,12 @@ public class UserRepository_db implements UserRepository {
     // DB CONNECTION
     private final Database database = new Database();
 
-    //FOR TESTING
-    public UserRepository_db() {
-    }
-
-
     // SQL STATEMENTS
     private final String CREATE_USER_SQL = "INSERT INTO users (user_id, username, password, isAdmin) VALUES (?,?,?,?)";
     private final String SEARCH_USERNAME_SQL = "SELECT COUNT(*) AS count FROM users WHERE username = ?";
     private final String FIND_USER_SQL = "SELECT * FROM users WHERE username = ?";
     private final String FIND_USER_BY_ID_SQL = "SELECT * FROM users WHERE user_id = ?";
     private final String SAVE_USERDATA_SQL = "INSERT INTO userdata (user_fk, name) VALUES (?, ?)";
-    private final String UPDATE_COINS_SQL = "UPDATE users SET coins = coins + ? WHERE user_id = ? AND coins + ? >= 0";
-    private final String UPDATE_ELO_SQL = "UPDATE users SET elorating = GREATEST(0, elorating + ?) WHERE user_id = ?";
     private final String ADD_CARD_TO_USER_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
 
     // IMPLEMENTATIONS
@@ -175,36 +168,6 @@ public class UserRepository_db implements UserRepository {
 
 
     @Override
-    public boolean updateCoins(String userId, int price) {
-        try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
-
-            try (PreparedStatement updateCoinsStmt = connection.prepareStatement(UPDATE_COINS_SQL)) {
-                updateCoinsStmt.setInt(1, price);
-                updateCoinsStmt.setString(2, userId);
-                updateCoinsStmt.setInt(3, price);
-
-                int affectedRows = updateCoinsStmt.executeUpdate();
-
-                if (affectedRows == 1) {
-                    connection.commit(); // Commit the transaction
-                    return true;
-                } else {
-                    connection.rollback(); // Rollback the transaction
-                    return false;
-                }
-            } catch (SQLException e) {
-                System.out.println("Error updating coins: " + e.getMessage());
-                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating coins: " + e.getMessage());
-            }
-        } catch (SQLException e) {
-            System.out.println("Database connection error: " + e.getMessage());
-            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
-        }
-    }
-
-
-    @Override
     public boolean addCardToStack(String userId, Card card) {
         try (Connection connection = database.getConnection()) {
             connection.setAutoCommit(false); // Start transaction
@@ -256,33 +219,7 @@ public class UserRepository_db implements UserRepository {
         return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
     }
 
-    @Override
-    public boolean updateELO(String userId, int eloToAdd) {
-        try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
 
-            try (PreparedStatement updateELOStmt = connection.prepareStatement(UPDATE_ELO_SQL)) {
-                updateELOStmt.setInt(1, eloToAdd);
-                updateELOStmt.setString(2, userId);
-
-                int affectedRows = updateELOStmt.executeUpdate();
-
-                if (affectedRows == 1) {
-                    connection.commit(); // Commit the transaction
-                    return true;
-                } else {
-                    connection.rollback(); // Rollback the transaction
-                    return false;
-                }
-            } catch (SQLException e) {
-                System.out.println("Error updating elo: " + e.getMessage());
-                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating elo: " + e.getMessage());
-            }
-        } catch (SQLException e) {
-            System.out.println("Database connection error: " + e.getMessage());
-            throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
-        }
-    }
 
 
     private UserData convertResultSetToUserData(ResultSet resultSet) throws SQLException {
