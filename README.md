@@ -22,3 +22,14 @@ To get started with the game, follow these steps:
    ```bash
    https://github.com/helhar1234/MCTG_helhar_swen1.git
 
+3. Start Docker and fetch the needed Database Container and start it
+    ```bash
+   docker pull helhar1234/my_mtcg_db:1.0
+   docker run -d --name my_mtcg_container -p 5432:5432 helhar1234/my_mtcg_db:1.0
+
+4. Connect to Database in IntelliJ (see connection data in databas/Database.java file)
+5. Run the sql Script sql/mtcg-script.sql to create the database
+6. Start the Application (Main.java)
+7. Run the CURL Script
+
+
