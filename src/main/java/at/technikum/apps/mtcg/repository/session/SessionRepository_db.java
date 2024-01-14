@@ -13,7 +13,10 @@ import java.util.Optional;
 
 public class SessionRepository_db implements SessionRepository {
     //DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+    public SessionRepository_db(Database database){
+        this.database = database;
+    }
 
     //SQL STATEMENTS
     private final String FIND_TOKEN_BY_USER_SQL = "SELECT token_name FROM access_token WHERE user_fk = ?";

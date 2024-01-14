@@ -16,7 +16,11 @@ import java.util.Optional;
 
 public class PackageRepository_db implements PackageRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public PackageRepository_db(Database database){
+        this.database = database;
+    }
 
     // SQL STATEMENTS
     private final String SAVE_PACKAGE_SQL = "INSERT INTO packages (package_id) VALUES (?) RETURNING package_id";

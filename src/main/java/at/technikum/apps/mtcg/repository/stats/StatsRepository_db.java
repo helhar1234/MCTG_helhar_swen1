@@ -11,7 +11,11 @@ import java.sql.SQLException;
 
 public class StatsRepository_db implements StatsRepository {
     //DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public StatsRepository_db(Database database){
+        this.database = database;
+    }
 
     //SQL STATEMENTS
     private final String GET_WINS_SQL = "SELECT COUNT(*) AS wins FROM battles WHERE winner_fk = ?";

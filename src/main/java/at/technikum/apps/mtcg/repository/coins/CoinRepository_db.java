@@ -10,7 +10,11 @@ import java.sql.SQLException;
 
 public class CoinRepository_db implements CoinRepository{
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public CoinRepository_db(Database database){
+        this.database = database;
+    }
     // SQL STATEMENTS
     private final String UPDATE_COINS_SQL = "UPDATE users SET coins = coins + ? WHERE user_id = ? AND coins + ? >= 0";
     // IMPLEMENTATIONS

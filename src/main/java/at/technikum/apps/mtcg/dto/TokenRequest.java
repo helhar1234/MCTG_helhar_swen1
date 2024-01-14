@@ -7,7 +7,7 @@ public class TokenRequest {
     TokenRequest() {
     }
 
-    TokenRequest(String username, String password) {
+    public TokenRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }

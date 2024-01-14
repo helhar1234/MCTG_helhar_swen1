@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg;
 
 import at.technikum.apps.mtcg.controller.*;
+import at.technikum.apps.mtcg.database.Database;
 import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
@@ -28,23 +29,27 @@ import at.technikum.apps.mtcg.service.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: ADD INJECTOR TO MtcgApp
 public class Injector {
     public List<Controller> createController() {
+        //Database initialisieren
+        Database database = new Database();
+        Random random = new Random();
         // Repositories initialisieren
-        UserRepository userRepository = new UserRepository_db();
-        CardRepository cardRepository = new CardRepository_db();
-        SessionRepository sessionRepository = new SessionRepository_db();
-        BattleRepository battleRepository = new BattleRepository_db();
-        PackageRepository packageRepository = new PackageRepository_db();
-        ScoreboardRepository scoreboardRepository = new ScoreboardRepository_db();
-        StatsRepository statsRepository = new StatsRepository_db();
-        TradingRepository tradingRepository = new TradingRepository_db();
-        WheelOfFortuneRepository wheelOfFortuneRepository = new WheelOfFortuneRepository_db();
-        CoinRepository coinRepository = new CoinRepository_db();
-        ELORepository eloRepository = new ELORepository_db();
+        UserRepository userRepository = new UserRepository_db(database);
+        CardRepository cardRepository = new CardRepository_db(database);
+        SessionRepository sessionRepository = new SessionRepository_db(database);
+        BattleRepository battleRepository = new BattleRepository_db(database);
+        PackageRepository packageRepository = new PackageRepository_db(database);
+        ScoreboardRepository scoreboardRepository = new ScoreboardRepository_db(database);
+        StatsRepository statsRepository = new StatsRepository_db(database);
+        TradingRepository tradingRepository = new TradingRepository_db(database);
+        WheelOfFortuneRepository wheelOfFortuneRepository = new WheelOfFortuneRepository_db(database);
+        CoinRepository coinRepository = new CoinRepository_db(database);
+        ELORepository eloRepository = new ELORepository_db(database);
 
         // Services initialisieren
 
@@ -58,7 +63,7 @@ public class Injector {
         StatsService statsService = new StatsService(statsRepository, sessionService);
         TradingService tradingService = new TradingService(tradingRepository, cardRepository, userRepository, sessionService);
         TransactionsService transactionsService = new TransactionsService(cardRepository, userRepository, packageRepository, sessionService, coinRepository);
-        WheelOfFortuneService wheelOfFortuneService = new WheelOfFortuneService(wheelOfFortuneRepository, userRepository, cardRepository, coinRepository);
+        WheelOfFortuneService wheelOfFortuneService = new WheelOfFortuneService(wheelOfFortuneRepository, userRepository, cardRepository, coinRepository, random);
 
         // Battle-Logik und Battle-Warteschlange initialisieren
         BattleLogic battleLogic = new BattleLogic(battleRepository, userRepository, cardRepository, eloRepository);

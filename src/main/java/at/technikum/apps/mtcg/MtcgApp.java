@@ -13,7 +13,7 @@ import java.util.List;
 
 public class MtcgApp implements ServerApplication {
 
-    private List<Controller> controllers = new ArrayList<>();
+    private final List<Controller> controllers;
 
     public MtcgApp() {
         Injector injector = new Injector();
@@ -49,8 +49,7 @@ public class MtcgApp implements ServerApplication {
                 case "packages":
                     selectedController = getController(PackageController.class);
                     break;
-                case "transactions":
-                    // Spezialfall für transactions/packages
+                case "/transactions/packages":
                     if (request.getRoute().startsWith("/transactions/packages")) {
                         selectedController = getController(TransactionsController.class);
                     }

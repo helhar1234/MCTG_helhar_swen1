@@ -11,7 +11,11 @@ import java.util.Optional;
 
 public class BattleRepository_db implements BattleRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public BattleRepository_db(Database database){
+        this.database = database;
+    }
 
     // SQL STATEMENTS
     private final String START_BATTLE_SQL = "INSERT INTO battles (battle_id, player_a_fk, player_b_fk, start_time, status) VALUES (?,?,?,CURRENT_TIMESTAMP,'active')";

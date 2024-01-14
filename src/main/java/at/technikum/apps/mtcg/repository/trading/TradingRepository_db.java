@@ -15,7 +15,11 @@ import java.util.Optional;
 
 public class TradingRepository_db implements TradingRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public TradingRepository_db(Database database){
+        this.database = database;
+    }
 
     // SQL STATEMENTS
     private final String FIND_TRADE_BY_ID_SQL = "SELECT * from trades WHERE trade_id = ?";

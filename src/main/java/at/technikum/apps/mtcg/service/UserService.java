@@ -21,7 +21,7 @@ public class UserService {
     }
 
     public Optional<User> createUser(User user) {
-        user.setId(UUID.randomUUID().toString());
+        if (user.getId() == null) user.setId(UUID.randomUUID().toString());
         user.setPassword(hashingService.encrypt(user.getPassword()));
         user.setAdmin(Objects.equals(user.getUsername(), "admin"));
         if (userRepository.isUsernameExists(user.getUsername())) {

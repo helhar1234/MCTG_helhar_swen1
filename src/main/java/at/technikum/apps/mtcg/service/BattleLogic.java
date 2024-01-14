@@ -137,7 +137,7 @@ public class BattleLogic {
         }
     }
 
-    private Card determineRoundWinner(Card cardA, Card cardB) {
+    public Card determineRoundWinner(Card cardA, Card cardB) {
         // Special rules check
         if (isSpecialRuleApplicable(cardA, cardB)) {
             return getSpecialRuleWinner(cardA, cardB);
@@ -175,7 +175,7 @@ public class BattleLogic {
         // Define the winner based on special rules
         if (cardA.getName().equalsIgnoreCase("Goblin") && cardB.getName().equalsIgnoreCase("Dragon")) return cardB;
         if (cardA.getName().equalsIgnoreCase("Wizzard") && cardB.getName().equalsIgnoreCase("Ork")) return cardA;
-        if (cardA.getName().equalsIgnoreCase("Knight") && cardB.getCardType().equalsIgnoreCase("spell") && cardB.getElementType().equalsIgnoreCase("Water"))
+        if (cardA.getName().equalsIgnoreCase("Knight") && cardB.getCardType().equalsIgnoreCase("spell") && cardB.getElementType().equalsIgnoreCase("water"))
             return cardB;
         if (cardA.getName().equalsIgnoreCase("Kraken") && cardB.getCardType().equalsIgnoreCase("spell")) return cardA;
         if (cardA.getName().equalsIgnoreCase("FireElf") && cardB.getName().equalsIgnoreCase("Dragon")) return cardA;

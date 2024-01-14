@@ -9,7 +9,7 @@ public class Package {
     public Package() {
     }
 
-    Package(String id, int price, boolean sold) {
+    public Package(String id, int price, boolean sold) {
         this.id = id;
         this.price = price;
         this.sold = sold;

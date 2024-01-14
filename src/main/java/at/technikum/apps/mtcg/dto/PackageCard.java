@@ -8,7 +8,7 @@ public class PackageCard {
     PackageCard() {
     }
 
-    PackageCard(String id, String name, int damage) {
+    public PackageCard(String id, String name, int damage) {
         this.id = id;
         this.name = name;
         this.damage = damage;

@@ -10,8 +10,11 @@ import java.sql.SQLException;
 
 public class ELORepository_db implements ELORepository{
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
 
+    public ELORepository_db(Database database){
+        this.database = database;
+    }
 
     // SQL STATEMENTS
     private final String UPDATE_ELO_SQL = "UPDATE users SET elorating = GREATEST(0, elorating + ?) WHERE user_id = ?";

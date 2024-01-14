@@ -11,10 +11,10 @@ import java.sql.SQLException;
 
 public class WheelOfFortuneRepository_db implements WheelOfFortuneRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
 
-
-    public WheelOfFortuneRepository_db() {
+    public WheelOfFortuneRepository_db(Database database){
+        this.database = database;
     }
 
     // SQL STATEMENTS

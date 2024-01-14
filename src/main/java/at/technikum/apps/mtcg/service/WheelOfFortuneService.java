@@ -19,14 +19,17 @@ public class WheelOfFortuneService {
     private final CardRepository cardRepository;
     private final CoinRepository coinRepository;
 
+    private final Random random;
+
     public WheelOfFortuneService(WheelOfFortuneRepository wheelOfFortuneRepository,
                                  UserRepository userRepository,
                                  CardRepository cardRepository,
-                                 CoinRepository coinRepository) {
+                                 CoinRepository coinRepository, Random random) {
         this.wheelOfFortuneRepository = wheelOfFortuneRepository;
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
         this.coinRepository = coinRepository;
+        this.random = random;
     }
 
     public WheelPrize spin(User user) {
@@ -40,7 +43,6 @@ public class WheelOfFortuneService {
     }
 
     private WheelPrize getRandPrize(User spinner) {
-        Random random = new Random();
         int randomNumber = random.nextInt(16) + 1;
         WheelPrize prize = new WheelPrize();
 

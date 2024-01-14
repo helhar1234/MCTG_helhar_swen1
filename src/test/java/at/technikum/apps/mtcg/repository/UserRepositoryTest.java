@@ -9,10 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,70 +19,68 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 public class UserRepositoryTest {
     @Test
-    void testUpdateCoinsSuccess() throws SQLException {
-        // Arrange
-        Database mockDatabase = mock(Database.class);
-        Connection mockConnection = mock(Connection.class);
-        PreparedStatement mockStatement = mock(PreparedStatement.class);
+    void shouldReturnTrueWhenUsernameExists() throws SQLException {
+        // Mock the database and its related objects
+        Database mockedDatabase = mock(Database.class);
+        Connection mockedConnection = mock(Connection.class);
+        PreparedStatement mockedStatement = mock(PreparedStatement.class);
+        ResultSet mockedResultSet = mock(ResultSet.class);
 
-        when(mockDatabase.getConnection()).thenReturn(mockConnection);
-        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
-        when(mockStatement.executeUpdate()).thenReturn(1);
+        // Define the behavior of the database mock
+        when(mockedDatabase.getConnection()).thenReturn(mockedConnection);
+        when(mockedConnection.prepareStatement(anyString())).thenReturn(mockedStatement);
+        when(mockedStatement.executeQuery()).thenReturn(mockedResultSet);
 
-        UserRepository_db userRepository = new UserRepository_db(mockDatabase);
+        // Simulate a database response that finds a matching username
+        when(mockedResultSet.next()).thenReturn(true); // Simulates moving to the first row of the result set
+        when(mockedResultSet.getInt("count")).thenReturn(1); // Simulates finding one entry matching the username
 
-        // Act
-        boolean success = userRepository.updateCoins("userId", 100);
+        // Create an instance of the class under test, using the mocked database
+        UserRepository_db userRepository = new UserRepository_db(mockedDatabase);
 
-        // Assert
-        assertTrue(success);
+        // Call the method under test
+        boolean exists = userRepository.isUsernameExists("testUserRepository");
+
+        // Assertions and verifications
+        assertTrue(exists); // Assert that the method returns true when username is found
+        verify(mockedStatement).setString(1, "testUserRepository"); // Verify that the statement was set with the correct username
+        verify(mockedResultSet).getInt("count"); // Verify that the count was retrieved from the result set
     }
+
+
 
     @Test
-    void testAddCardToStackSuccess() throws SQLException {
-        // Arrange
-        Database mockDatabase = mock(Database.class);
-        Connection mockConnection = mock(Connection.class);
-        PreparedStatement mockStatement = mock(PreparedStatement.class);
+    void shouldSaveUserAndReturnUserWhenSuccessful() throws SQLException {
+        // Mock the database and its related objects
+        Database mockedDatabase = mock(Database.class);
+        Connection mockedConnection = mock(Connection.class);
+        PreparedStatement mockedCreateUserStatement = mock(PreparedStatement.class);
+        ResultSet mockedGeneratedKeys = mock(ResultSet.class);
+        PreparedStatement mockedSaveUserDataStatement = mock(PreparedStatement.class);
 
-        when(mockDatabase.getConnection()).thenReturn(mockConnection);
-        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
-        when(mockStatement.executeUpdate()).thenReturn(1);
+        // Define the behavior of the database mock
+        when(mockedDatabase.getConnection()).thenReturn(mockedConnection);
+        when(mockedConnection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(mockedCreateUserStatement);
+        when(mockedCreateUserStatement.executeUpdate()).thenReturn(1); // Simulates one row affected by the insert
+        when(mockedCreateUserStatement.getGeneratedKeys()).thenReturn(mockedGeneratedKeys);
+        when(mockedGeneratedKeys.next()).thenReturn(true); // Simulates that a new key was generated
+        when(mockedConnection.prepareStatement(anyString())).thenReturn(mockedSaveUserDataStatement);
+        when(mockedSaveUserDataStatement.executeUpdate()).thenReturn(1); // Simulates successful insertion of user data
 
-        UserRepository_db userRepository = new UserRepository_db(mockDatabase);
-        Card card = new Card("cardId", "testCard", 10, "water", "spell");
+        // Create an instance of the class under test, using the mocked database
+        UserRepository_db userRepository = new UserRepository_db(mockedDatabase);
 
-        // Act
-        boolean success = userRepository.addCardToStack("userId", card);
+        // Create a test user
+        User testUser = new User("testId", "testUserRepository", "testPassword", 5, 100, false);
 
-        // Assert
-        assertTrue(success);
+        // Call the method under test
+        Optional<User> savedUser = userRepository.saveUser(testUser);
+
+        // Assertions and verifications
+        assertTrue(savedUser.isPresent()); // Assert that a user is returned
+        assertEquals(testUser, savedUser.get()); // Assert that the returned user matches the test user
+        verify(mockedConnection, times(1)).setAutoCommit(false); // Verify that the transaction was started
+        verify(mockedConnection, times(1)).commit(); // Verify that the transaction was committed
     }
-    @Test
-    void testIsUsernameExistsExceptionHandling() throws SQLException {
-        // Arrange
-        Database mockDatabase = mock(Database.class);
-        when(mockDatabase.getConnection()).thenThrow(new SQLException("Database error"));
-
-        UserRepository_db userRepository = new UserRepository_db(mockDatabase);
-
-        // Act & Assert
-        assertThrows(RuntimeException.class, () -> userRepository.isUsernameExists("testUser"));
-    }
-
-    @Test
-    void testFindByUsernameExceptionHandling() throws SQLException {
-        // Arrange
-        Database mockDatabase = mock(Database.class);
-        when(mockDatabase.getConnection()).thenThrow(new SQLException("Database error"));
-
-        UserRepository_db userRepository = new UserRepository_db(mockDatabase);
-
-        // Act & Assert
-        assertThrows(RuntimeException.class, () -> userRepository.findByUsername("testUser"));
-    }
-
-
-
 
 }

@@ -1,6 +1,7 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.User;
+import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,75 +15,75 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 
-@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
     @Test
-    void shouldSetUserId_whenCreateUser() {
-        // Arrange
-        UserRepository userRepository = mock(UserRepository.class);
-        UserService userService = new UserService(userRepository);
-        User user = new User("MaxMustermann", "max_pw");
+    void createUserShouldCreateNewUserWhenUsernameIsUnique() {
+        // Mock dependencies
+        UserRepository mockedUserRepository = mock(UserRepository.class);
+        HashingService mockedHashingService = mock(HashingService.class);
 
-        // Mocking to return Optional of the user
-        when(userRepository.saveUser(any())).thenReturn(Optional.of(user));
+        // Set up expected behavior
+        when(mockedUserRepository.isUsernameExists(anyString())).thenReturn(false);
+        when(mockedHashingService.encrypt(anyString())).thenReturn("encryptedPassword");
 
-        // Act
-        User answer = userService.createUser(user).orElseThrow();
+        // Mock the behavior of saveUser to return a User with the encrypted password
+        when(mockedUserRepository.saveUser(any(User.class))).thenAnswer(invocation -> {
+            User argumentUser = invocation.getArgument(0);
+            argumentUser.setPassword("encryptedPassword");
+            return Optional.of(argumentUser);
+        });
 
-        // Assert
-        assertNotEquals("", answer.getId());
-        assertEquals("MaxMustermann", answer.getUsername());
-        assertEquals("max_pw", answer.getPassword());
+        // Create instance of UserService
+        UserService userService = new UserService(mockedUserRepository, mockedHashingService);
+
+        // Create a new user
+        User newUser = new User("123", "testUserService", "password");
+        Optional<User> createdUser = userService.createUser(newUser);
+
+        // Assertions
+        assertTrue(createdUser.isPresent());
+        assertEquals("encryptedPassword", createdUser.get().getPassword());
+        assertNotNull(createdUser.get().getId());
+    }
+
+
+    @Test
+    void findUserByIdShouldRetrieveUser() {
+        UserRepository mockedUserRepository = mock(UserRepository.class);
+        when(mockedUserRepository.findUserById(anyString())).thenReturn(Optional.of(new User()));
+
+        UserService userService = new UserService(mockedUserRepository, null);
+
+        Optional<User> foundUser = userService.findUserById("123");
+
+        assertTrue(foundUser.isPresent());
     }
 
     @Test
-    void shouldCallUserRepository_whenSaveUser() {
-        // Arrange
-        UserRepository userRepository = mock(UserRepository.class);
-        UserService userService = new UserService(userRepository);
-        User user = new User("MaximeMusterfrau", "maxime_pw");
+    void findUserByUsernameShouldRetrieveUser() {
+        UserRepository mockedUserRepository = mock(UserRepository.class);
+        when(mockedUserRepository.findByUsername(anyString())).thenReturn(Optional.of(new User()));
 
-        // Act
-        userService.createUser(user);
+        UserService userService = new UserService(mockedUserRepository, null);
 
-        // Assert
-        verify(userRepository, times(1)).saveUser(user);
+        Optional<User> foundUser = userService.findUserByUsername("testUserService");
+
+        assertTrue(foundUser.isPresent());
     }
 
     @Test
-    void shouldReturnEmptyOptional_whenUsernameExists() {
-        // Arrange
-        UserRepository userRepository = mock(UserRepository.class);
-        UserService userService = new UserService(userRepository);
-        String existingUsername = "ExistingUser";
-        User user = new User(existingUsername, "password");
+    void getUserShouldReturnUserForAuthorizedRequest() {
+        UserRepository mockedUserRepository = mock(UserRepository.class);
+        User requestingUser = new User("123", "testUserService", "password");
 
-        // Simulate user creation
-        when(userRepository.isUsernameExists(existingUsername)).thenReturn(false);
-        when(userRepository.saveUser(any(User.class))).thenReturn(Optional.of(user));
+        UserService userService = new UserService(mockedUserRepository, null);
 
-        // Act - Create the user for the first time
-        Optional<User> firstCreationResult = userService.createUser(user);
+        Optional<User> retrievedUser = userService.getUser(requestingUser, "testUserService");
 
-        // Mocking to simulate existing username for subsequent creation attempts
-        when(userRepository.isUsernameExists(existingUsername)).thenReturn(true);
-
-        // Act - Attempt to create the same user again
-        Optional<User> secondCreationResult = userService.createUser(user);
-
-        // Assert
-        assertTrue(firstCreationResult.isPresent()); // First creation should be successful
-        assertTrue(secondCreationResult.isEmpty());  // Second creation should fail due to existing username
+        assertTrue(retrievedUser.isPresent());
+        assertEquals("testUserService", retrievedUser.get().getUsername());
     }
 
-    @Test
-    void shouldHandleNullUserOnCreate() {
-        // Arrange
-        UserRepository userRepository = mock(UserRepository.class);
-        UserService userService = new UserService(userRepository);
 
-        // Act and Assert
-        assertThrows(NullPointerException.class, () -> userService.createUser(null));
-    }
 
 }

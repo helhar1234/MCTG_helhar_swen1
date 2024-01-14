@@ -14,7 +14,11 @@ import java.util.Optional;
 
 public class UserRepository_db implements UserRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public UserRepository_db(Database database){
+        this.database = database;
+    }
 
     // SQL STATEMENTS
     private final String CREATE_USER_SQL = "INSERT INTO users (user_id, username, password, isAdmin) VALUES (?,?,?,?)";
@@ -47,8 +51,15 @@ public class UserRepository_db implements UserRepository {
                                     connection.commit(); // Commit the transaction
                                     return Optional.of(user); // Return the user
                                 }
+                            }catch (SQLException e) {
+                                connection.rollback(); // Rollback the transaction
+                                System.out.println("Error during user data save: " + e.getMessage());
+                                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during user data save: " + e.getMessage());
                             }
                         }
+                    } catch (SQLException e) {
+                        System.out.println("Database connection error: " + e.getMessage());
+                        throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
                     }
                 }
             } catch (SQLException e) {

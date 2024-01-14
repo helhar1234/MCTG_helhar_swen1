@@ -14,9 +14,14 @@ import java.util.List;
 
 public class ScoreboardRepository_db implements ScoreboardRepository {
     // DB CONNECTION
-    private final Database database = new Database();
+    private final Database database;
+
+    public ScoreboardRepository_db(Database database){
+        this.database = database;
+    }
+
     // SQL STATEMENTS
-    private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users WHERE isAdmin is false ORDER BY elorating DESC";
+    private final String GET_SCOREBOARD_SQL = "SELECT username, elorating FROM users WHERE isAdmin is false ORDER BY elorating DESC LIMIT 100";
 
     // IMPLEMENTATIONS
 
