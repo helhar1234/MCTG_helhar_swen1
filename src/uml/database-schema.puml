@@ -1,0 +1,97 @@
+@startuml
+!define Table class
+!define PK <b><u>
+
+Table users {
+  PK user_id VARCHAR(255)
+  username VARCHAR(50)
+  password VARCHAR(255)
+  coins INT
+  eloRating INT
+  isAdmin boolean
+}
+
+Table access_token {
+  PK token_id SERIAL
+  user_fk VARCHAR(255)
+  token_name VARCHAR(255)
+  token_timestamp TIMESTAMP
+}
+
+Table userdata {
+  PK userdata_id SERIAL
+  user_fk VARCHAR(255)
+  name VARCHAR(255)
+  bio VARCHAR(255)
+  image VARCHAR(255)
+}
+
+Table cards {
+  PK card_id VARCHAR(255)
+  name VARCHAR(255)
+  damage INT
+  elementType VARCHAR(255)
+  cardType VARCHAR(255)
+}
+
+Table packages {
+  PK orderid SERIAL
+  package_id VARCHAR(255)
+  price INT
+  sold BOOLEAN
+}
+
+Table cards_packages {
+  card_fk VARCHAR(255)
+  package_fk VARCHAR(255)
+}
+
+Table user_cards {
+  user_fk VARCHAR(255)
+  card_fk VARCHAR(255)
+  inDeck BOOLEAN
+}
+
+Table trades {
+  PK trade_id VARCHAR(255)
+  user_fk VARCHAR(255)
+  card_fk VARCHAR(255)
+  expectedType VARCHAR(255)
+  expectedDamage VARCHAR(255)
+}
+
+Table battles {
+  PK battle_id VARCHAR(255)
+  player_a_fk VARCHAR(255)
+  player_b_fk VARCHAR(255)
+  winner_fk VARCHAR(255)
+  start_time TIMESTAMP
+  status VARCHAR(255)
+}
+
+Table battle_logs {
+  PK log_id SERIAL
+  battle_fk VARCHAR(255)
+  log_entry TEXT
+}
+
+Table wheelOfFortune {
+  PK wheel_id SERIAL
+  user_fk VARCHAR(255)
+  wheel_time DATE
+}
+
+users --o{ access_token
+users --o{ userdata
+users --o{ user_cards
+users --o{ trades
+access_token --o{ users
+userdata --o{ users
+cards_packages --o{ cards
+cards_packages --o{ packages
+user_cards --o{ cards
+battles --o{ battle_logs
+battles --o{ users
+wheelOfFortune --o{ users
+
+@enduml

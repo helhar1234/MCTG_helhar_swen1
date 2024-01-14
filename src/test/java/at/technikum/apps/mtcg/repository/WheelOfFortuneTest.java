@@ -2,31 +2,18 @@ package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.database.Database;
-import at.technikum.apps.mtcg.entity.Card;
-import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.entity.UserData;
-import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 import at.technikum.apps.mtcg.repository.wheel.WheelOfFortuneRepository_db;
 import at.technikum.server.http.HttpStatus;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Executable;
-import java.sql.*;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
-
-import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 public class WheelOfFortuneTest {
     @Test
     void shouldReturnTrueWhenUserHasAlreadySpun() throws SQLException {
@@ -50,6 +37,7 @@ public class WheelOfFortuneTest {
         assertTrue(repository.hasUserSpun("userId"));
     }
 
+
     @Test
     void shouldSaveSpinSuccessfully() throws SQLException {
         Database mockedDatabase = mock(Database.class);
@@ -66,6 +54,7 @@ public class WheelOfFortuneTest {
         verify(mockedConnection, times(1)).commit(); // Verify that the transaction is committed
     }
 
+
     @Test
     void shouldThrowExceptionOnDatabaseConnectionError() throws SQLException {
         Database mockedDatabase = mock(Database.class);
@@ -80,6 +69,7 @@ public class WheelOfFortuneTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, thrown.getStatus());
         assertEquals("Database connection error: java.sql.SQLException: Connection error", thrown.getMessage());
     }
+
 
     @Test
     void shouldThrowExceptionOnDatabaseQueryError() throws SQLException {

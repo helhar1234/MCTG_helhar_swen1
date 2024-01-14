@@ -4,7 +4,7 @@ public class TokenRequest {
     private String username;
     private String password;
 
-    TokenRequest() {
+    public TokenRequest() {
     }
 
     public TokenRequest(String username, String password) {

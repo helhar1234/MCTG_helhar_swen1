@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
 
-// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
 public class SessionController extends Controller {
     @Override
     public boolean supports(String route) {
@@ -37,27 +36,31 @@ public class SessionController extends Controller {
         this.sessionService = sessionService;
     }
 
+    /**
+     * Handles a login request by validating user credentials and returning a token if successful.
+     *
+     * @param request The HTTP request containing the login information.
+     * @return A Response object containing either the login token or an error message.
+     */
     private Response loginUser(Request request) {
+        TokenRequest tokenRequest;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
-            TokenRequest tokenRequest = objectMapper.readValue(request.getBody(), TokenRequest.class);
 
-            Optional<String> token = sessionService.getToken(tokenRequest);
-            if (token.isPresent()) {
-                // Login successful, token is present
-                return ResponseHelper.okResponse(token.get(), HttpContentType.TEXT_PLAIN);
-            } else {
-                // Invalid username/password
-                return ResponseHelper.unauthorizedResponse("Invalid username/password");
-            }
+            // Convert the JSON body of the request to a TokenRequest object
+            tokenRequest = objectMapper.readValue(request.getBody(), TokenRequest.class);
+
         } catch (JsonProcessingException e) {
-            // Specific catch for JSON parsing errors
+            // Catch block for JSON parsing errors
             return ResponseHelper.badRequestResponse("Error parsing login request: " + e.getMessage());
-        } catch (Exception e) {
-            // General catch for other exceptions
-            System.out.println("Error during user login: " + e.getMessage());
-            return ResponseHelper.internalServerErrorResponse("Error processing login request: " + e.getMessage());
         }
+
+        // Attempt to retrieve a login token using the provided credentials
+        Optional<String> token = sessionService.getToken(tokenRequest);
+        // Login successful, return the token in the response
+        return ResponseHelper.okResponse(token.get(), HttpContentType.TEXT_PLAIN);
     }
+
 
 }

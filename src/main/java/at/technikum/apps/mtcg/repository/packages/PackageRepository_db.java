@@ -18,7 +18,7 @@ public class PackageRepository_db implements PackageRepository {
     // DB CONNECTION
     private final Database database;
 
-    public PackageRepository_db(Database database){
+    public PackageRepository_db(Database database) {
         this.database = database;
     }
 
@@ -32,27 +32,41 @@ public class PackageRepository_db implements PackageRepository {
     private final String UPDATE_PACKAGE_SOLD_SQL = "UPDATE packages SET sold = true WHERE package_id = ?";
 
     // IMPLEMENTATIONS
+
+    /**
+     * Saves a package to the database.
+     *
+     * @param id The unique identifier of the package to be saved.
+     * @return True if the package is successfully saved, false otherwise.
+     * @throws HttpStatusException If there is an error during the package saving process or a database connection issue.
+     */
     @Override
     public boolean savePackage(String id) {
         boolean success = false;
 
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
+            // Prepare and execute the SQL statement to save the package
             try (PreparedStatement savePackageStatement = connection.prepareStatement(SAVE_PACKAGE_SQL)) {
-                savePackageStatement.setString(1, id);
+                savePackageStatement.setString(1, id); // Set the package ID
 
+                // Execute the query and process the result set
                 try (ResultSet resultSet = savePackageStatement.executeQuery()) {
                     if (resultSet.next()) {
+                        // Retrieve the package ID from the result set
                         String returnedId = resultSet.getString("package_id");
+                        // Check if the package ID is valid (non-null and not empty)
                         success = returnedId != null && !returnedId.isEmpty();
                     }
                 }
 
+                // Check the success flag to decide whether to commit or rollback
                 if (success) {
                     connection.commit(); // Commit the transaction
                 } else {
-                    connection.rollback(); // Rollback the transaction
+                    connection.rollback(); // Rollback the transaction if unsuccessful
                 }
             } catch (SQLException e) {
                 connection.rollback(); // Rollback the transaction
@@ -63,26 +77,36 @@ public class PackageRepository_db implements PackageRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return success;
+        return success; // Return the success status
     }
 
 
+    /**
+     * Adds a card to a specific package in the database.
+     *
+     * @param packageId The unique identifier of the package.
+     * @param cardId    The unique identifier of the card to be added.
+     * @return True if the card is successfully added to the package, false otherwise.
+     * @throws HttpStatusException If there is an error during the operation or a database connection issue.
+     */
     @Override
     public boolean addCardToPackage(String packageId, String cardId) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
+            // Prepare and execute the SQL statement to add the card to the package
             try (PreparedStatement connectStmt = connection.prepareStatement(CONNECT_CARDS_PACKAGES_SQL)) {
                 connectStmt.setString(1, cardId);
                 connectStmt.setString(2, packageId);
 
+                // Execute the update and check the affected rows
                 int affectedRows = connectStmt.executeUpdate();
-
                 if (affectedRows > 0) {
                     connection.commit(); // Commit the transaction
                     return true;
                 } else {
-                    connection.rollback(); // Rollback the transaction
+                    connection.rollback(); // Rollback the transaction if the update didn't affect any rows
                     return false;
                 }
             } catch (SQLException e) {
@@ -97,16 +121,24 @@ public class PackageRepository_db implements PackageRepository {
     }
 
 
+    /**
+     * Retrieves a package from the database by its ID.
+     *
+     * @param id The unique identifier of the package to be retrieved.
+     * @return An Optional containing the Package if found, or an empty Optional if not found.
+     * @throws HttpStatusException If there is an error during the search or a database connection issue.
+     */
     @Override
     public Optional<Package> findPackageById(String id) {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_PACKAGE_BY_ID_SQL)) {
 
-            findCardStmt.setString(1, id);
+            findCardStmt.setString(1, id); // Set the package ID in the SQL query
 
+            // Execute the query and process the result set
             try (ResultSet resultSet = findCardStmt.executeQuery()) {
                 if (resultSet.next()) {
-                    // Assuming you have a method to convert ResultSet to a Card object
+                    // Convert the ResultSet to a Package object
                     Package aPackage = convertResultSetToPackage(resultSet);
                     return Optional.of(aPackage);
                 }
@@ -118,9 +150,17 @@ public class PackageRepository_db implements PackageRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return Optional.empty();
+        return Optional.empty(); // Return an empty Optional if no package is found
     }
 
+
+    /**
+     * Retrieves all cards contained in a specific package.
+     *
+     * @param packageId The unique identifier of the package.
+     * @return An array of Card objects contained in the specified package.
+     * @throws HttpStatusException If there is an error during the retrieval or a database connection issue.
+     */
     @Override
     public Card[] getPackageCardsById(String packageId) {
         List<Card> cards = new ArrayList<>();
@@ -128,10 +168,11 @@ public class PackageRepository_db implements PackageRepository {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardsStmt = connection.prepareStatement(FIND_CARDS_IN_PACKAGE_SQL)) {
 
-            findCardsStmt.setString(1, packageId);
+            findCardsStmt.setString(1, packageId); // Set the package ID in the SQL query
 
             try (ResultSet resultSet = findCardsStmt.executeQuery()) {
                 while (resultSet.next()) {
+                    // Convert each ResultSet entry to a Card object and add to the list
                     Card card = convertResultSetToCard(resultSet);
                     cards.add(card);
                 }
@@ -144,18 +185,27 @@ public class PackageRepository_db implements PackageRepository {
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
 
-        return cards.toArray(new Card[0]);
+        return cards.toArray(new Card[0]); // Convert the list of cards to an array and return it
     }
 
+
+    /**
+     * Retrieves the ID of the first package not yet owned by a specific user.
+     *
+     * @param userId The unique identifier of the user.
+     * @return The package ID, or null if no such package is found.
+     * @throws HttpStatusException If there is an error during the search or a database connection issue.
+     */
     @Override
     public String getFirstPackageNotPossessing(String userId) {
         try (Connection connection = database.getConnection();
              PreparedStatement stmt = connection.prepareStatement(GET_FIRST_PACKAGE_NOT_POSSESSING_SQL)) {
 
-            stmt.setString(1, userId);
+            stmt.setString(1, userId); // Set the user ID in the SQL query
 
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
+                    // Retrieve and return the package ID from the result set
                     return resultSet.getString("package_id");
                 }
             } catch (SQLException e) {
@@ -166,21 +216,28 @@ public class PackageRepository_db implements PackageRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return null;
+        return null; // Return null if no package is found
     }
 
+
+    /**
+     * Retrieves an available package from the database by its ID.
+     *
+     * @param packageId The unique identifier of the package to be retrieved.
+     * @return An Optional containing the Package if found, or an empty Optional if not found.
+     * @throws HttpStatusException If there is an error during the search or a database connection issue.
+     */
     @Override
     public Optional<Package> getAvailablePackages(String packageId) {
         try (Connection connection = database.getConnection();
              PreparedStatement findCardStmt = connection.prepareStatement(FIND_AVAILABLE_PACKAGE_BY_ID_SQL)) {
 
-            findCardStmt.setString(1, packageId);
+            findCardStmt.setString(1, packageId); // Set the package ID in the SQL query
 
             try (ResultSet resultSet = findCardStmt.executeQuery()) {
                 if (resultSet.next()) {
-                    // Assuming you have a method to convert ResultSet to a Card object
                     Package aPackage = convertResultSetToPackage(resultSet);
-                    return Optional.of(aPackage);
+                    return Optional.of(aPackage); // Return the package wrapped in an Optional
                 }
             } catch (SQLException e) {
                 System.out.println("Error finding package by ID: " + e.getMessage());
@@ -190,24 +247,33 @@ public class PackageRepository_db implements PackageRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return Optional.empty();
+        return Optional.empty(); // Return an empty Optional if no package is found
     }
 
+    /**
+     * Deletes a package from the database, or marks it as sold.
+     *
+     * @param packageId The unique identifier of the package to be deleted or marked as sold.
+     * @return True if the package is successfully deleted or updated, false otherwise.
+     * @throws HttpStatusException If there is an error during the operation or a database connection issue.
+     */
     @Override
     public boolean deletePackage(String packageId) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction for database integrity
+            connection.setAutoCommit(false);
 
+            // Prepare and execute the SQL statement to delete the package or update its status
             try (PreparedStatement stmt = connection.prepareStatement(UPDATE_PACKAGE_SOLD_SQL)) {
-                stmt.setString(1, packageId);
+                stmt.setString(1, packageId); // Set the package ID
 
+                // Execute the update and check the affected rows
                 int affectedRows = stmt.executeUpdate();
-
                 if (affectedRows == 1) {
                     connection.commit(); // Commit the transaction
                     return true;
                 } else {
-                    connection.rollback(); // Rollback the transaction
+                    connection.rollback(); // Rollback the transaction if the update didn't affect any rows
                     return false;
                 }
             } catch (SQLException e) {

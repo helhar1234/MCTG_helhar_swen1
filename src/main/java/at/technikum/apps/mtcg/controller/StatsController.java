@@ -41,16 +41,33 @@ public class StatsController extends Controller {
         this.userService = userService;
     }
 
+    /**
+     * Retrieves the statistics (ELO, wins, total battles played) for a user and returns them in a JSON formatted response.
+     *
+     * @param request The HTTP request containing the user's information.
+     * @return A Response object containing the user's statistics in JSON format or an error message.
+     */
     private Response getStats(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Retrieve the statistics for the authenticated user
         Map<String, Object> userStats = statsService.getUserStats(requester);
+
+        // Prepare to convert the user's statistics to a JSON string
         String userStatsJson;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // Convert the user's statistics to a JSON string
             userStatsJson = objectMapper.writeValueAsString(userStats);
         } catch (JsonProcessingException e) {
+            // In case of JSON processing errors, return a bad request response with error details
             return ResponseHelper.badRequestResponse("Error parsing stats data: " + e.getMessage());
         }
+
+        // Create and return a successful response with the user's statistics in JSON format
         return ResponseHelper.okResponse(userStatsJson, HttpContentType.APPLICATION_JSON);
     }
 

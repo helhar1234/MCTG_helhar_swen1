@@ -8,7 +8,6 @@ import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
 import at.technikum.server.http.Response;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MtcgApp implements ServerApplication {
@@ -49,7 +48,7 @@ public class MtcgApp implements ServerApplication {
                 case "packages":
                     selectedController = getController(PackageController.class);
                     break;
-                case "/transactions/packages":
+                case "transactions":
                     if (request.getRoute().startsWith("/transactions/packages")) {
                         selectedController = getController(TransactionsController.class);
                     }

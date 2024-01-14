@@ -6,12 +6,10 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.server.http.HttpStatus;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-// TODO: ADD COMMENTS & MAKE MORE ÜBERSICHTLICH
 public class BattleService {
     private final BattleRepository battleRepository;
     private final BattleLogic battleLogic;
@@ -27,68 +25,103 @@ public class BattleService {
         this.deckService = deckService;
     }
 
+    /**
+     * Initiates a battle for a player, either by joining an open battle or creating a new one.
+     *
+     * @param player The player initiating the battle.
+     * @return The result of the battle, which could be waiting, in-progress, or a no-opponent scenario.
+     */
     public BattleResult start(User player) {
-        // Find an open battle
+        // Search for an open battle that the player can join
         Optional<BattleResult> openBattle = findOpenBattle(player);
 
-        // If there is an open battle, join it
+        // If there's an open battle, join it
         if (openBattle.isPresent()) {
             BattleResult battle = openBattle.get();
-            battle.setPlayerB(player); // Set player as Player B
-            battlesWaiting.put(battle.getId(), battle); // Update the waiting battle
+            battle.setPlayerB(player); // Set the current player as Player B
+            battlesWaiting.put(battle.getId(), battle); // Update the battle's status in the waiting pool
+            // Wait for the battle to complete and return the result
             return waitForBattleCompletion(battle.getId());
         } else {
-            // Create a new battle if none are open
+            // If no open battle is available, create a new battle
             String battleId = UUID.randomUUID().toString();
             BattleResult newBattle = new BattleResult(battleId, player, "waiting");
-            battlesWaiting.put(battleId, newBattle);
+            battlesWaiting.put(battleId, newBattle); // Add the new battle to the waiting pool
 
-            // Wait for another player to join or timeout
+            // Wait for a fixed time for another player to join
             long startTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() - startTime < 2000) { // 20s wait time
+            while (System.currentTimeMillis() - startTime < 20000) { // 20 seconds timeout
                 BattleResult updatedBattle = battlesWaiting.get(battleId);
-                if (updatedBattle.getPlayerB() != null) {
-                    // If another player joined, start the battle
+                // If another player joins, start the battle
+                if (updatedBattle != null && updatedBattle.getPlayerB() != null) {
                     return battleLogic.performBattle(battleId, player, updatedBattle.getPlayerB());
                 }
             }
 
-            // If no player joins in 1 minute, delete the battle
+            // If no player joins within the timeout, remove the battle from waiting and return a no-opponent result
             battlesWaiting.remove(battleId);
             return new BattleResult(battleId, player, "no_opponent");
         }
     }
 
+
+    /**
+     * Searches for an open battle that the player can join.
+     *
+     * @param player The player looking to join a battle.
+     * @return An Optional containing an open BattleResult if one is found, or an empty Optional if not.
+     */
     private Optional<BattleResult> findOpenBattle(User player) {
+        // Iterate over the current battles waiting for an opponent
         for (BattleResult battle : battlesWaiting.values()) {
-            if (battle.getPlayerB() == null && Objects.equals(battle.getStatus(), "waiting") && battle.getPlayerA() != player) {
+            // Check if the battle is open and the player is not already part of it
+            if (battle.getPlayerB() == null && "waiting".equals(battle.getStatus()) && !battle.getPlayerA().equals(player)) {
                 return Optional.of(battle);
             }
         }
         return Optional.empty();
     }
 
+
+    /**
+     * Waits for a battle to complete and returns the result.
+     *
+     * @param battleId The ID of the battle to wait for.
+     * @return The completed BattleResult, or null if the battle does not complete within the timeout.
+     */
     private BattleResult waitForBattleCompletion(String battleId) {
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 60000) { // Wait up to 1 minute
-            Optional<BattleResult> updatedBattle = null;
-            updatedBattle = battleRepository.findBattleById(battleId);
-            if (updatedBattle.isPresent() && updatedBattle.get().getStatus().equals("completed")) {
+        while (System.currentTimeMillis() - startTime < 60000) { // 1-minute timeout
+            Optional<BattleResult> updatedBattle = battleRepository.findBattleById(battleId);
+            // Check if the battle has completed
+            if (updatedBattle.isPresent() && "completed".equals(updatedBattle.get().getStatus())) {
                 return updatedBattle.get();
             }
         }
-        return null; // Return null if the battle does not complete in time
+        // Return null if the battle does not complete within the timeout
+        return null;
     }
 
-    public BattleResult battle(User player) {
 
+    /**
+     * Facilitates a battle for the player.
+     *
+     * @param player The player participating in the battle.
+     * @return The result of the battle.
+     * @throws HttpStatusException If the player has not set up a deck or if no opponent is found for the battle.
+     */
+    public BattleResult battle(User player) {
+        // Check if the player has a deck set up
         if (!deckService.hasDeckSet(player.getId())) {
             throw new HttpStatusException(HttpStatus.FORBIDDEN, "Player " + player.getUsername() + " has no deck set up");
         }
 
+        // Start the battle process
         BattleResult battleResult = start(player);
-        if (battleResult.getStatus().equals("no_opponent")) {
-            throw new HttpStatusException(HttpStatus.OK, "No opponent found for battle - Try again later:)");
+        // Handle the scenario where no opponent is found
+        if ("no_opponent".equals(battleResult.getStatus())) {
+            throw new HttpStatusException(HttpStatus.OK,
+                    "Player " + player.getUsername() + " has no opponent found for battle - Try again later:)");
         }
         return battleResult;
     }

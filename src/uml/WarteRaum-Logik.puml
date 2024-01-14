@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor #F0EAD6
+skinparam defaultFontColor #333333
+skinparam defaultFontSize 14
+skinparam roundcorner 20
+skinparam shadowing false
+
+skinparam if {
+  BackgroundColor LightGreen
+  BorderColor Green
+}
+
+skinparam loop {
+  BackgroundColor LightBlue
+  BorderColor Blue
+}
+
+:start Battle;
+:Check Deck Setup;
+if (Deck Set?) then (yes)
+  :Initiate Battle;
+  if (Found Open Battle?) then (yes)
+    :Join Open Battle;
+    :Wait for Battle Completion;
+  else (no)
+    :Create New Battle;
+    while (Waiting for Opponent) is (yes)
+      :Check for Joining Player;
+      if (Player Joined?) then (yes)
+        :Start Battle;
+        stop
+      else (no)
+        :Continue Waiting;
+      endif
+    endwhile
+    :No Opponent Found;
+  endif
+else (no)
+  :Throw Deck Not Set Exception;
+endif
+
+if (No Opponent?) then (yes)
+  :Throw No Opponent Exception;
+else (no)
+  :Return Battle Result;
+endif
+
+stop
+
+@enduml

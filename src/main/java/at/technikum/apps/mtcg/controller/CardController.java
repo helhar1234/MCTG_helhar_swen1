@@ -45,19 +45,34 @@ public class CardController extends Controller {
         this.userService = userService;
     }
 
+    /**
+     * Retrieves the cards associated with a user and returns them in a JSON formatted response.
+     *
+     * @param request The HTTP request containing the user's information.
+     * @return A Response object containing the user's cards in JSON format or an error message.
+     */
     private Response getUserCards(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Retrieve the array of cards belonging to the authenticated user
         Card[] cards = cardService.getCards(requester);
+
+        // Prepare to convert the array of cards to a JSON string
         String cardsJson;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // Convert the array of cards to a JSON string
             cardsJson = objectMapper.writeValueAsString(cards);
         } catch (JsonProcessingException e) {
+            // In case of JSON processing errors, return a bad request response with error details
             return ResponseHelper.badRequestResponse("Error parsing card data: " + e.getMessage());
         }
 
+        // Create and return a successful response with the user's cards in JSON format
         return ResponseHelper.okResponse(cardsJson, HttpContentType.APPLICATION_JSON);
-
     }
 
 

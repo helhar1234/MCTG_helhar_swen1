@@ -13,7 +13,7 @@ public class BattleRepository_db implements BattleRepository {
     // DB CONNECTION
     private final Database database;
 
-    public BattleRepository_db(Database database){
+    public BattleRepository_db(Database database) {
         this.database = database;
     }
 
@@ -26,13 +26,24 @@ public class BattleRepository_db implements BattleRepository {
     private final String END_BATTLE_SQL = "UPDATE battles SET winner_fk = ?, status = 'completed' WHERE battle_id = ?";
 
     // IMPLEMENTATIONS
+
+    /**
+     * Retrieves a battle result by its ID from the database.
+     *
+     * @param battleId The unique identifier of the battle to be retrieved.
+     * @return An Optional containing the BattleResult if found, or an empty Optional if not found.
+     * @throws HttpStatusException If there is an SQL error or database connection issue.
+     */
     @Override
     public Optional<BattleResult> findBattleById(String battleId) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_BATTLE_BY_ID_SQL)) {
+            // Set the battle ID in the SQL query
             statement.setString(1, battleId);
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
+                    // Construct User objects for both players using data from the database
                     User playerA = new User(
                             resultSet.getString("userA_id"),
                             resultSet.getString("userA_username"),
@@ -51,16 +62,14 @@ public class BattleRepository_db implements BattleRepository {
                             resultSet.getBoolean("userB_isAdmin")
                     );
 
+                    // Determine the winner of the battle, if any
                     User winner = null;
                     String winnerId = resultSet.getString("winner_fk");
                     if (winnerId != null) {
-                        if (winnerId.equals(playerA.getId())) {
-                            winner = playerA;
-                        } else if (winnerId.equals(playerB.getId())) {
-                            winner = playerB;
-                        }
+                        winner = winnerId.equals(playerA.getId()) ? playerA : (winnerId.equals(playerB.getId()) ? playerB : null);
                     }
 
+                    // Construct and return the BattleResult object
                     BattleResult battle = new BattleResult(
                             resultSet.getString("battle_id"),
                             playerA,
@@ -73,128 +82,187 @@ public class BattleRepository_db implements BattleRepository {
                     return Optional.of(battle);
                 }
             } catch (SQLException e) {
+                // Handle SQL exceptions during the query execution
                 System.out.println("Error finding battle by ID: " + e.getMessage());
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error finding battle by ID: " + e);
             }
         } catch (SQLException e) {
+            // Handle SQL exceptions related to database connectivity
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return Optional.empty();
     }
 
+
+    /**
+     * Starts a new battle by inserting battle details into the database.
+     *
+     * @param battleId   The unique identifier of the battle to be started.
+     * @param hostId     The ID of the host player.
+     * @param opponentId The ID of the opponent player.
+     * @return True if the battle is successfully started, false otherwise.
+     * @throws HttpStatusException If there is an error during the battle creation or a database connection issue.
+     */
     @Override
     public boolean startBattle(String battleId, String hostId, String opponentId) {
-
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
-            // Insert into users
+            // Prepare and execute the SQL statement to create a new battle
             try (PreparedStatement battleCreateStatement = connection.prepareStatement(START_BATTLE_SQL, Statement.RETURN_GENERATED_KEYS)) {
                 battleCreateStatement.setString(1, battleId);
                 battleCreateStatement.setString(2, hostId);
                 battleCreateStatement.setString(3, opponentId);
                 int battleAffectedRows = battleCreateStatement.executeUpdate();
 
-                // Retrieve the generated key (user id)
+                // Check if the battle record is successfully created
                 if (battleAffectedRows == 1) {
+                    // Commit the transaction if the battle is successfully created
                     connection.commit();
                     return true;
                 }
             } catch (SQLException e) {
-                connection.rollback(); // Rollback the transaction
+                // Rollback the transaction in case of any SQL error during battle creation
+                connection.rollback();
                 System.out.println("Error during battle creation: " + e.getMessage());
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during battle creation: " + e);
+            } finally {
+                // Reset auto-commit to its default state
+                connection.setAutoCommit(true);
             }
-            connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
+            // Handle SQL exceptions related to database connectivity
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return false;
+        return false; // Return false if the battle is not successfully started
     }
 
+
+    /**
+     * Starts a log for a specific battle with initial text.
+     *
+     * @param battleId The unique identifier of the battle.
+     * @param text     The initial text to be logged.
+     * @return True if the log is successfully started, false otherwise.
+     * @throws HttpStatusException If there is an error during log creation or a database connection issue.
+     */
     @Override
     public boolean startLog(String battleId, String text) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
-            // Insert into users
+            // Prepare and execute the SQL statement to start a new log
             try (PreparedStatement logCreateStatement = connection.prepareStatement(START_LOG_SQL, Statement.RETURN_GENERATED_KEYS)) {
                 logCreateStatement.setString(1, battleId);
                 logCreateStatement.setString(2, text);
                 int logAffectedRows = logCreateStatement.executeUpdate();
 
-                // Retrieve the generated key (user id)
+                // Commit the transaction if the log is successfully created
                 if (logAffectedRows == 1) {
                     connection.commit();
                     return true;
                 }
             } catch (SQLException e) {
-                connection.rollback(); // Rollback the transaction
+                // Rollback the transaction in case of any SQL error
+                connection.rollback();
                 System.out.println("Error during Log creation: " + e.getMessage());
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Log creation: " + e);
+            } finally {
+                // Reset auto-commit to its default state
+                connection.setAutoCommit(true);
             }
-            connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
+            // Handle SQL exceptions related to database connectivity
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
     }
 
+
+    /**
+     * Adds a new entry to the battle log in the database.
+     *
+     * @param battleId The unique identifier of the battle.
+     * @param text     The log text to be added.
+     * @return True if the log entry is successfully added, false otherwise.
+     * @throws HttpStatusException If there is an error during log addition or a database connection issue.
+     */
     @Override
     public boolean addToLog(String battleId, String text) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction for database integrity
+            connection.setAutoCommit(false);
 
-            // Insert into users
+            // Prepare and execute the SQL statement to add a new entry to the battle log
             try (PreparedStatement logCreateStatement = connection.prepareStatement(ADD_TO_LOG_SQL, Statement.RETURN_GENERATED_KEYS)) {
-                logCreateStatement.setString(1, text);
-                logCreateStatement.setString(2, battleId);
+                logCreateStatement.setString(1, text); // Set the log text
+                logCreateStatement.setString(2, battleId); // Set the battle ID
                 int logAffectedRows = logCreateStatement.executeUpdate();
 
-                // Retrieve the generated key (user id)
+                // Check if the log entry was successfully added
                 if (logAffectedRows == 1) {
-                    connection.commit();
+                    connection.commit(); // Commit the transaction to save changes
                     return true;
                 }
             } catch (SQLException e) {
-                connection.rollback(); // Rollback the transaction
+                // Rollback the transaction in case of any SQL error
+                connection.rollback();
                 System.out.println("Error during Log addition: " + e.getMessage());
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Log addition: " + e);
+            } finally {
+                // Reset auto-commit to its default state
+                connection.setAutoCommit(true);
             }
-            connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
+            // Handle SQL exceptions related to database connectivity
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return false;
+        return false; // Return false if the log entry is not successfully added
     }
 
+
+    /**
+     * Marks a user as the winner of a specific battle.
+     *
+     * @param battleId The unique identifier of the battle.
+     * @param userId   The ID of the user who won the battle.
+     * @return True if the winner is successfully marked, false otherwise.
+     * @throws HttpStatusException If there is an error during the process or a database connection issue.
+     */
     @Override
     public boolean crownWinner(String battleId, String userId) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
-            // Insert into users
+            // Prepare and execute the SQL statement to mark the winner of the battle
             try (PreparedStatement logCreateStatement = connection.prepareStatement(END_BATTLE_SQL, Statement.RETURN_GENERATED_KEYS)) {
                 logCreateStatement.setString(1, userId);
                 logCreateStatement.setString(2, battleId);
                 int logAffectedRows = logCreateStatement.executeUpdate();
 
-                // Retrieve the generated key (user id)
+                // Commit the transaction if the winner is successfully marked
                 if (logAffectedRows == 1) {
                     connection.commit();
                     return true;
                 }
             } catch (SQLException e) {
-                connection.rollback(); // Rollback the transaction
+                // Rollback the transaction in case of any SQL error
+                connection.rollback();
                 System.out.println("Error during Log addition: " + e.getMessage());
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Log addition: " + e);
+            } finally {
+                // Reset auto-commit to its default state
+                connection.setAutoCommit(true);
             }
-            connection.setAutoCommit(true); // Reset auto-commit to default
         } catch (SQLException e) {
+            // Handle SQL exceptions related to database connectivity
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }

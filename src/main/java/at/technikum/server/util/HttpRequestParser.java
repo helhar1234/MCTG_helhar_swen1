@@ -22,7 +22,7 @@ public class HttpRequestParser {
     }
 
     private void parseHeaders(String httpRequest, Request request) {
-        Pattern headerPattern = Pattern.compile("^(.+?):\s*(.+)$", Pattern.MULTILINE);
+        Pattern headerPattern = Pattern.compile("^(.+?): *(.+)$", Pattern.MULTILINE);
         Matcher matcher = headerPattern.matcher(httpRequest);
         while (matcher.find()) {
             request.addHeader(matcher.group(1), matcher.group(2));

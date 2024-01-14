@@ -33,12 +33,21 @@ public class TransactionsController extends Controller {
         this.sessionService = sessionService;
     }
 
+    /**
+     * Handles a request to buy a package.
+     *
+     * @param request The HTTP request containing the package buying information.
+     * @return A Response object indicating the success or failure of the package purchase.
+     */
     private Response buyPackage(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
-        // Assuming request.getBody() returns the raw body content that can be cast to String
+
+        // Assuming request.getBody() returns the raw body content that can be interpreted as the package ID
         String packageId = request.getBody();
 
-        // Proceed with making the transaction after getting the package ID.
+        // Proceed with making the transaction for the specified package ID.
+        // The method 'makeTransaction' is responsible for handling the transaction logic.
         transactionsService.makeTransaction(requester, packageId);
 
         // Return an OK response indicating the package was bought successfully.

@@ -1,19 +1,14 @@
 package at.technikum.apps.mtcg.service;
 
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
 public class UserServiceTest {
     @Test
@@ -33,7 +28,7 @@ public class UserServiceTest {
             return Optional.of(argumentUser);
         });
 
-        // Create instance of UserService
+        // Create an instance of UserService
         UserService userService = new UserService(mockedUserRepository, mockedHashingService);
 
         // Create a new user
@@ -46,7 +41,6 @@ public class UserServiceTest {
         assertNotNull(createdUser.get().getId());
     }
 
-
     @Test
     void findUserByIdShouldRetrieveUser() {
         UserRepository mockedUserRepository = mock(UserRepository.class);
@@ -54,6 +48,7 @@ public class UserServiceTest {
 
         UserService userService = new UserService(mockedUserRepository, null);
 
+        // Retrieve a user by ID
         Optional<User> foundUser = userService.findUserById("123");
 
         assertTrue(foundUser.isPresent());
@@ -66,6 +61,7 @@ public class UserServiceTest {
 
         UserService userService = new UserService(mockedUserRepository, null);
 
+        // Retrieve a user by username
         Optional<User> foundUser = userService.findUserByUsername("testUserService");
 
         assertTrue(foundUser.isPresent());
@@ -78,12 +74,12 @@ public class UserServiceTest {
 
         UserService userService = new UserService(mockedUserRepository, null);
 
+        // Get a user for an authorized request
         Optional<User> retrievedUser = userService.getUser(requestingUser, "testUserService");
 
         assertTrue(retrievedUser.isPresent());
         assertEquals("testUserService", retrievedUser.get().getUsername());
     }
-
 
 
 }

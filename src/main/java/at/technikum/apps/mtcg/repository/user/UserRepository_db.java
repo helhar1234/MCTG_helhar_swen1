@@ -16,7 +16,7 @@ public class UserRepository_db implements UserRepository {
     // DB CONNECTION
     private final Database database;
 
-    public UserRepository_db(Database database){
+    public UserRepository_db(Database database) {
         this.database = database;
     }
 
@@ -29,10 +29,18 @@ public class UserRepository_db implements UserRepository {
     private final String ADD_CARD_TO_USER_SQL = "INSERT INTO user_cards (user_fk, card_fk) VALUES (?, ?)";
 
     // IMPLEMENTATIONS
+
+    /**
+     * Saves a user's information in the database.
+     *
+     * @param user The User object containing user information to be saved.
+     * @return An Optional containing the saved User object if the operation is successful, or an empty Optional if it fails.
+     * @throws HttpStatusException If there is an error during the save operation or a database connection issue.
+     */
     @Override
     public Optional<User> saveUser(User user) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            connection.setAutoCommit(false); // Start a transaction
 
             try (PreparedStatement createUserStatement = connection.prepareStatement(CREATE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
                 createUserStatement.setString(1, user.getId());
@@ -51,7 +59,7 @@ public class UserRepository_db implements UserRepository {
                                     connection.commit(); // Commit the transaction
                                     return Optional.of(user); // Return the user
                                 }
-                            }catch (SQLException e) {
+                            } catch (SQLException e) {
                                 connection.rollback(); // Rollback the transaction
                                 System.out.println("Error during user data save: " + e.getMessage());
                                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during user data save: " + e.getMessage());
@@ -72,10 +80,17 @@ public class UserRepository_db implements UserRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return Optional.empty(); // Return empty if failed
+        return Optional.empty(); // Return empty if the operation fails
     }
 
 
+    /**
+     * Checks if a username already exists in the database.
+     *
+     * @param username The username to check.
+     * @return true if the username exists, false otherwise.
+     * @throws HttpStatusException If there is an error during the execution or a database connection issue.
+     */
     @Override
     public boolean isUsernameExists(String username) {
         try (Connection connection = database.getConnection();
@@ -84,7 +99,7 @@ public class UserRepository_db implements UserRepository {
             statement.setString(1, username);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return resultSet.getInt("count") > 0;
+                    return resultSet.getInt("count") > 0; // If count is greater than 0, username exists
                 }
             } catch (SQLException e) {
                 System.out.println("Error executing isUsernameExists: " + e.getMessage());
@@ -94,9 +109,17 @@ public class UserRepository_db implements UserRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return false;
+        return false; // Return false if an error occurs or if username doesn't exist
     }
 
+
+    /**
+     * Retrieves a user by their username from the database.
+     *
+     * @param username The username of the user to retrieve.
+     * @return An Optional containing the User object if found, or an empty Optional if not found or if an exception occurs.
+     * @throws HttpStatusException If there is an error during the execution or a database connection issue.
+     */
     @Override
     public Optional<User> findByUsername(String username) {
         try (Connection connection = database.getConnection();
@@ -117,10 +140,18 @@ public class UserRepository_db implements UserRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
+        return Optional.empty(); // Return an empty Optional if user not found or if an error occurs
     }
 
 
+    /**
+     * Updates user data in the database.
+     *
+     * @param id       The ID of the user whose data needs to be updated.
+     * @param userData The new user data to be updated.
+     * @return The updated UserData object if the operation is successful, or null if it fails.
+     * @throws HttpStatusException If there is an error during the update operation or a database connection issue.
+     */
     @Override
     public UserData updateUserData(String id, UserData userData) {
         StringBuilder sql = new StringBuilder("UPDATE userdata SET ");
@@ -178,6 +209,14 @@ public class UserRepository_db implements UserRepository {
     }
 
 
+    /**
+     * Adds a card to a user's stack in the database.
+     *
+     * @param userId The ID of the user to whom the card will be added.
+     * @param card   The card to be added to the user's stack.
+     * @return true if the card was successfully added, false otherwise.
+     * @throws HttpStatusException If there is an error during the execution or a database connection issue.
+     */
     @Override
     public boolean addCardToStack(String userId, Card card) {
         try (Connection connection = database.getConnection()) {
@@ -207,6 +246,13 @@ public class UserRepository_db implements UserRepository {
     }
 
 
+    /**
+     * Retrieves a user by their ID from the database.
+     *
+     * @param id The ID of the user to retrieve.
+     * @return An Optional containing the User object if found, or an empty Optional if not found or if an exception occurs.
+     * @throws HttpStatusException If there is an error during the execution or a database connection issue.
+     */
     @Override
     public Optional<User> findUserById(String id) {
         try (Connection connection = database.getConnection();
@@ -227,10 +273,8 @@ public class UserRepository_db implements UserRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e.getMessage());
         }
-        return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
+        return Optional.empty(); // Return an empty Optional if user not found or if an error occurs
     }
-
-
 
 
     private UserData convertResultSetToUserData(ResultSet resultSet) throws SQLException {

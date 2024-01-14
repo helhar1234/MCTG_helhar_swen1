@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-// TODO: ADD INJECTOR TO MtcgApp
 public class Injector {
     public List<Controller> createController() {
         //Database initialisieren

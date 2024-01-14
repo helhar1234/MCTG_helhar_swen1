@@ -45,16 +45,33 @@ public class WheelOfFortuneController extends Controller {
         this.wheelOfFortuneService = wheelOfFortuneService;
     }
 
+    /**
+     * Handles a request to spin the wheel of fortune and retrieve a prize.
+     *
+     * @param request The HTTP request containing the user's information.
+     * @return A Response object containing the prize won in the wheel of fortune spin, in JSON format, or an error message.
+     */
     private Response getWheelPrize(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Spin the wheel of fortune for the user and retrieve the prize
         WheelPrize prize = wheelOfFortuneService.spin(requester);
+
         String prizeJson;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // Convert the prize object to a JSON string
             prizeJson = objectMapper.writeValueAsString(prize);
         } catch (JsonProcessingException e) {
+            // Return a bad request response in case of JSON parsing errors
             return ResponseHelper.badRequestResponse("Error parsing prize data: " + e.getMessage());
         }
+
+        // Return a response with the prize in JSON format
         return ResponseHelper.okResponse(prizeJson, HttpContentType.APPLICATION_JSON);
     }
+
 }

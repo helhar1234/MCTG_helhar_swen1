@@ -1,4 +1,4 @@
-package at.technikum.apps.mtcg.dto;
+package at.technikum.apps.mtcg.entity;
 
 public class TradeRequest {
     private String id;

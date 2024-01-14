@@ -5,9 +5,9 @@ import at.technikum.apps.mtcg.entity.User;
 
 public class WheelPrize {
     private User spinner;
-    private String prizeType; // Z.B. "COINS" oder "CARD"
-    private int coinAmount; // Nur relevant, wenn prizeType "COINS" ist
-    private Card wonCard; // Nur relevant, wenn prizeType "CARD" ist
+    private String prizeType;
+    private int coinAmount;
+    private Card wonCard;
 
     public WheelPrize() {
     }

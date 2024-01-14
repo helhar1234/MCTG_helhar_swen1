@@ -46,19 +46,34 @@ public class PackageController extends Controller {
     }
 
 
+    /**
+     * Handles the creation of a new package of cards.
+     *
+     * @param request The HTTP request containing the package creation information.
+     * @return A Response object indicating the success or failure of the package creation.
+     */
     private Response createPackage(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Declare an array to hold the package cards from the request
         PackageCard[] packageCards;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // Read the package cards from the request body and convert them into a PackageCard array
             packageCards = objectMapper.readValue(request.getBody(), PackageCard[].class);
         } catch (JsonProcessingException e) {
+            // In case of JSON processing errors, return a bad request response with error details
             return ResponseHelper.badRequestResponse("Error parsing package data: " + e.getMessage());
         }
 
+        // Save the package of cards for the authenticated user
         boolean isPackageSaved = packageService.savePackage(requester, packageCards);
-        return ResponseHelper.createdResponse("Package and cards created");
 
+        // Return a response indicating the package and cards have been successfully created
+        return ResponseHelper.createdResponse("Package and cards created");
     }
 
 

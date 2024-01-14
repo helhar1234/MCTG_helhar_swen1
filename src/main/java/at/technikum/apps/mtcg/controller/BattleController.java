@@ -14,9 +14,6 @@ import at.technikum.server.http.Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
-// TODO: ADD ELO Abfrage
-// TODO: ADD game feature
 public class BattleController extends Controller {
     @Override
     public boolean supports(String route) {
@@ -47,18 +44,34 @@ public class BattleController extends Controller {
         this.deckService = deckService;
     }
 
+    /**
+     * Handles a battle request and returns the battle result.
+     *
+     * @param request The HTTP request containing the battle request information.
+     * @return A Response object containing the battle result or an error message.
+     */
     private Response battle(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Initiate a battle for the authenticated user and get the result
         BattleResult battleResult = battleService.battle(requester);
+
+        // Prepare to convert the BattleResult object to a JSON string
         String responseBody;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // Convert the BattleResult object to a JSON string
             responseBody = objectMapper.writeValueAsString(battleResult);
         } catch (JsonProcessingException e) {
+            // In case of JSON processing errors, return a bad request response with error details
             return ResponseHelper.badRequestResponse("Error parsing battle data: " + e.getMessage());
         }
-        return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, responseBody);
 
+        // Create and return a successful response with the battle result in JSON format
+        return new Response(HttpStatus.OK, HttpContentType.APPLICATION_JSON, responseBody);
     }
 
 

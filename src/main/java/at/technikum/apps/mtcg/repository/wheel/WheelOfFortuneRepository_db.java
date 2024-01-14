@@ -13,7 +13,7 @@ public class WheelOfFortuneRepository_db implements WheelOfFortuneRepository {
     // DB CONNECTION
     private final Database database;
 
-    public WheelOfFortuneRepository_db(Database database){
+    public WheelOfFortuneRepository_db(Database database) {
         this.database = database;
     }
 
@@ -22,6 +22,14 @@ public class WheelOfFortuneRepository_db implements WheelOfFortuneRepository {
     private final String SAVE_SPIN_SQL = "INSERT INTO wheelOfFortune (user_fk) VALUES (?)";
 
     // IMPLEMENTATIONS
+
+    /**
+     * Checks if a user has already spun the wheel today.
+     *
+     * @param id The ID of the user to check.
+     * @return true if the user has spun the wheel today, false otherwise.
+     * @throws HttpStatusException If there is an error during the execution or a database connection issue.
+     */
     @Override
     public boolean hasUserSpun(String id) {
         try (Connection connection = database.getConnection();
@@ -42,9 +50,16 @@ public class WheelOfFortuneRepository_db implements WheelOfFortuneRepository {
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
         return false;
-
     }
 
+
+    /**
+     * Saves a user's spin of the wheel in the database.
+     *
+     * @param id The ID of the user whose spin needs to be saved.
+     * @return true if the spin was successfully saved, false otherwise.
+     * @throws HttpStatusException If there is an error during the execution or a database connection issue.
+     */
     @Override
     public boolean saveSpin(String id) {
         boolean success = false;
@@ -75,4 +90,5 @@ public class WheelOfFortuneRepository_db implements WheelOfFortuneRepository {
         }
         return success;
     }
+
 }

@@ -15,5 +15,4 @@ public abstract class Controller {
         return new Response(httpStatus, HttpContentType.APPLICATION_JSON, "{ \"error\": \"" + httpStatus.getMessage() + "\"}");
     }
 
-    // THOUGHT: more functionality e.g. ok(), json(), etc
 }

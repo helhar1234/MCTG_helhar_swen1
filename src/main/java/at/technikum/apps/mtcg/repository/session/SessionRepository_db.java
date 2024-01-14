@@ -14,7 +14,8 @@ import java.util.Optional;
 public class SessionRepository_db implements SessionRepository {
     //DB CONNECTION
     private final Database database;
-    public SessionRepository_db(Database database){
+
+    public SessionRepository_db(Database database) {
         this.database = database;
     }
 
@@ -28,17 +29,28 @@ public class SessionRepository_db implements SessionRepository {
 
 
     //IMPLEMENTATIONS
+
+    /**
+     * Generates and saves a token for a user in the database.
+     *
+     * @param user The User object for whom the token is to be generated.
+     * @return An Optional containing the generated token if successful, or an empty Optional if not.
+     * @throws HttpStatusException If there is an error during the operation or a database connection issue.
+     */
     @Override
     public Optional<String> generateToken(User user) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
+            // Prepare and execute the SQL statement to generate and save a token
             try (PreparedStatement statement = connection.prepareStatement(SAVE_TOKEN_SQL)) {
                 statement.setString(1, user.getId());
                 statement.setString(2, user.getUsername() + "-mtcgToken");
 
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
+                        // Retrieve the generated token from the result set
                         String returnedToken = resultSet.getString("token_name");
                         connection.commit(); // Commit the transaction
                         return Optional.of(returnedToken);
@@ -58,15 +70,23 @@ public class SessionRepository_db implements SessionRepository {
     }
 
 
+    /**
+     * Finds a user by their authentication token.
+     *
+     * @param token The authentication token.
+     * @return An Optional containing the User if found, or an empty Optional if not found.
+     * @throws HttpStatusException If there is an error during the retrieval or a database connection issue.
+     */
     @Override
     public Optional<User> findByToken(String token) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_USER_BY_TOKEN_SQL)) {
 
-            statement.setString(1, token);
+            statement.setString(1, token); // Set the token in the SQL query
+
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    // Assuming convertResultSetToUser is implemented correctly to map the ResultSet to a User object
+                    // Convert the ResultSet to a User object
                     User user = convertResultSetToUser(resultSet);
                     return Optional.of(user);
                 }
@@ -78,40 +98,58 @@ public class SessionRepository_db implements SessionRepository {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
+        return Optional.empty();
     }
 
+
+    /**
+     * Retrieves the authentication token for a specific user by their user ID.
+     *
+     * @param userId The unique identifier of the user.
+     * @return An Optional containing the token if found, or an empty Optional if not found.
+     * @throws HttpStatusException If there is an error during the retrieval or a database connection issue.
+     */
     @Override
     public Optional<String> findTokenByUserId(String userId) {
         try (Connection connection = database.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_TOKEN_BY_USER_SQL)) {
 
-            statement.setString(1, userId);
+            statement.setString(1, userId); // Set the user ID in the SQL query
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    // Assuming you have a method to convert ResultSet to a User object
+                    // Retrieve the token from the result set
                     String token = resultSet.getString("token_name");
-                    return Optional.ofNullable(token);
+                    return Optional.ofNullable(token); // Return the token wrapped in an Optional
                 }
             } catch (SQLException e) {
-                System.out.println("Error executing findByUsername: " + e.getMessage());
-                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error executing findByUsername: " + e.getMessage());
+                System.out.println("Error executing findTokenByUserId: " + e.getMessage());
+                throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error executing findTokenByUserId: " + e.getMessage());
             }
         } catch (SQLException e) {
             System.out.println("Database connection error: " + e.getMessage());
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
-        return Optional.empty(); // Return an empty Optional if user not found or if exception occurs
+        return Optional.empty(); // Return an empty Optional if the token is not found or if an exception occurs
     }
 
+    /**
+     * Deletes a specific user's authentication token from the database.
+     *
+     * @param userId The unique identifier of the user whose token is to be deleted.
+     * @return True if the token is successfully deleted, false otherwise.
+     * @throws HttpStatusException If there is an error during the deletion or a database connection issue.
+     */
     @Override
     public boolean deleteToken(String userId) {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
+            // Prepare and execute the SQL statement to delete the token
             try (PreparedStatement deleteStmt = connection.prepareStatement(DELETE_TOKEN_SQL)) {
-                deleteStmt.setString(1, userId);
-                deleteStmt.executeUpdate();
+                deleteStmt.setString(1, userId); // Set the user ID
+
+                deleteStmt.executeUpdate(); // Execute the update
                 connection.commit(); // Commit the transaction
                 return true;
             } catch (SQLException e) {
@@ -126,12 +164,20 @@ public class SessionRepository_db implements SessionRepository {
     }
 
 
+    /**
+     * Deletes expired authentication tokens from the database.
+     *
+     * @return True if the expired tokens are successfully deleted, false otherwise.
+     * @throws HttpStatusException If there is an error during the deletion or a database connection issue.
+     */
     private boolean deleteExpiredTokens() {
         try (Connection connection = database.getConnection()) {
-            connection.setAutoCommit(false); // Start transaction
+            // Start a transaction
+            connection.setAutoCommit(false);
 
+            // Prepare and execute the SQL statement to delete expired tokens
             try (PreparedStatement deleteStmt = connection.prepareStatement(DELETE_EXPIRED_TOKEN_SQL)) {
-                deleteStmt.executeUpdate();
+                deleteStmt.executeUpdate(); // Execute the update
                 connection.commit(); // Commit the transaction
                 return true;
             } catch (SQLException e) {
@@ -146,8 +192,15 @@ public class SessionRepository_db implements SessionRepository {
     }
 
 
+    /**
+     * Authenticates a user's token by checking its validity in the database.
+     *
+     * @param token The authentication token to be verified.
+     * @return True if the token is valid and exists, false otherwise.
+     * @throws HttpStatusException If there is an error during token authentication or a database connection issue.
+     */
     public boolean authenticateToken(String token) {
-        // First, delete expired tokens
+        // Delete expired tokens first
         if (!deleteExpiredTokens()) {
             return false; // Return false if failed to delete expired tokens
         }
@@ -155,13 +208,11 @@ public class SessionRepository_db implements SessionRepository {
         try (Connection connection = database.getConnection();
              PreparedStatement authStmt = connection.prepareStatement(AUTH_TOKEN_SQL)) {
 
-            // Set the token in the authenticate statement
-            authStmt.setString(1, token);
+            authStmt.setString(1, token); // Set the token in the authentication statement
 
-            // Execute authenticate statement
+            // Execute the authentication statement
             try (ResultSet resultSet = authStmt.executeQuery()) {
-                // Return true if the token is found
-                return resultSet.next();
+                return resultSet.next(); // Return true if the token is found and valid
             } catch (SQLException e) {
                 System.out.println("Error during token authentication: " + e.getMessage());
                 throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during token authentication: " + e.getMessage());
@@ -171,6 +222,7 @@ public class SessionRepository_db implements SessionRepository {
             throw new HttpStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Database connection error: " + e);
         }
     }
+
 
     private User convertResultSetToUser(ResultSet resultSet) throws SQLException {
         User user = new User();

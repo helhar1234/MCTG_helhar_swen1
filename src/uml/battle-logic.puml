@@ -1,0 +1,46 @@
+@startuml
+start
+
+:Start Battle;
+if (Battle Started?) then (yes)
+  :Initialize Player Decks;
+  :Log Initial Deck States;
+  :Initialize ELO Ratings;
+  while (Round <= MAX_ROUNDS and Both Decks not Empty) is (yes)
+    :Shuffle Decks;
+    :Draw Top Card Each;
+
+    if (Special Rules Apply?) then (yes)
+      :Determine Winner with Special Rules;
+    else (no)
+      if (Both Cards are Spells?) then (yes)
+        :Calculate Effective Damage;
+        :Compare Damage;
+      else (no)
+        :Compare Direct Damage;
+      endif
+      if (Winner Determined?) then (yes)
+        :Winner Takes Round;
+      else (no)
+        :Round Ends in Draw;
+      endif
+    endif
+
+    :Update Decks and Log;
+  endwhile
+  :Save Deck Changes;
+  if (Is Draw?) then (yes)
+    :Log Draw;
+  else (no)
+    :Determine Final Winner;
+    :Update ELO Ratings;
+    :Log Winner;
+  endif
+else (no)
+  :Log Error: Failed to Start Battle;
+endif
+
+:End Battle;
+stop
+
+@enduml

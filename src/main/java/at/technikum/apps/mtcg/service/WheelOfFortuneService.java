@@ -18,13 +18,9 @@ public class WheelOfFortuneService {
     private final UserRepository userRepository;
     private final CardRepository cardRepository;
     private final CoinRepository coinRepository;
-
     private final Random random;
 
-    public WheelOfFortuneService(WheelOfFortuneRepository wheelOfFortuneRepository,
-                                 UserRepository userRepository,
-                                 CardRepository cardRepository,
-                                 CoinRepository coinRepository, Random random) {
+    public WheelOfFortuneService(WheelOfFortuneRepository wheelOfFortuneRepository, UserRepository userRepository, CardRepository cardRepository, CoinRepository coinRepository, Random random) {
         this.wheelOfFortuneRepository = wheelOfFortuneRepository;
         this.userRepository = userRepository;
         this.cardRepository = cardRepository;
@@ -32,35 +28,64 @@ public class WheelOfFortuneService {
         this.random = random;
     }
 
+    /**
+     * Spins the wheel of fortune for the given user and returns the prize won.
+     * Users are allowed to spin only once per day.
+     *
+     * @param user The user who is spinning the wheel.
+     * @return The prize won by the user.
+     * @throws HttpStatusException If the user has already spun the wheel today.
+     */
     public WheelPrize spin(User user) {
+        // Check if the user has already spun the wheel today
         if (!wheelOfFortuneRepository.hasUserSpun(user.getId())) {
+            // Get a random prize for the user
             WheelPrize prize = getRandPrize(user);
+
+            // Record the user's spin in the repository
             wheelOfFortuneRepository.saveSpin(user.getId());
+
             return prize;
         } else {
+            // If the user has already spun today, throw an exception
             throw new HttpStatusException(HttpStatus.FORBIDDEN, user.getUsername() + " has already spun today - Try again tomorrow;)");
         }
     }
 
+
+    /**
+     * Generates a random prize for the user spinning the wheel.
+     *
+     * @param spinner The user spinning the wheel.
+     * @return The randomly generated WheelPrize.
+     */
     private WheelPrize getRandPrize(User spinner) {
+        // Generate a random number to determine the prize
         int randomNumber = random.nextInt(16) + 1;
         WheelPrize prize = new WheelPrize();
 
+        // Set the spinner of the prize
         prize.setSpinner(spinner);
+
+        // Determine the prize based on the random number
         if (randomNumber == 1) {
+            // If the number is 1, deduct coins from the user
             updateUserCoins(spinner, -2);
             prize.setPrizeType("COINS");
             prize.setCoinAmount(-2);
         } else if (randomNumber == 2) {
+            // If the number is 2, deduct more coins from the user
             updateUserCoins(spinner, -5);
             prize.setPrizeType("COINS");
             prize.setCoinAmount(-5);
         } else if (randomNumber <= 10) {
-            int coinsToAdd = randomNumber - 2; // Zufälliger Betrag zwischen 1 und 10 Münzen
+            // If the number is between 3 and 10, add coins to the user
+            int coinsToAdd = randomNumber - 2;
             updateUserCoins(spinner, coinsToAdd);
             prize.setPrizeType("COINS");
             prize.setCoinAmount(coinsToAdd);
         } else {
+            // If the number is above 10, award a card or coins if no card is available
             Optional<Card> card = cardRepository.getCardNotPossesed();
             if (!card.isPresent()) {
                 updateUserCoins(spinner, 5);
@@ -75,16 +100,24 @@ public class WheelOfFortuneService {
         return prize;
     }
 
+
+    /**
+     * Updates the coin balance of the user based on a given change in coins.
+     * Ensures that the coin balance does not fall below zero.
+     *
+     * @param spinner    The user whose coin balance is to be updated.
+     * @param coinChange The change in the coin amount (can be negative or positive).
+     */
     private void updateUserCoins(User spinner, int coinChange) {
+        // Calculate the new coin amount
         int newCoinAmount = spinner.getCoins() + coinChange;
 
-        // Überprüfen, ob die neue Münzmenge negativ wäre
+        // Ensure the new coin amount does not fall below zero
         if (newCoinAmount < 0) {
             spinner.setCoins(0);
         } else {
-            // Aktualisieren Sie die Münzen in der Datenbank
+            // Update the user's coin balance in the database and memory
             coinRepository.updateCoins(spinner.getId(), coinChange);
-            // Aktualisieren Sie den Münzstand des Benutzers im Speicher
             spinner.setCoins(newCoinAmount);
         }
     }

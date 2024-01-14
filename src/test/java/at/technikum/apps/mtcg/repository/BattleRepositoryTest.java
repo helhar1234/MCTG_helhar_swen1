@@ -8,44 +8,52 @@ import org.junit.jupiter.api.Test;
 import java.sql.*;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class BattleRepositoryTest {
 
     @Test
     void findBattleByIdShouldReturnBattleWhenExists() throws SQLException {
+        // Create mock objects to simulate database interactions
         Database mockedDatabase = mock(Database.class);
         Connection mockedConnection = mock(Connection.class);
         PreparedStatement mockedStatement = mock(PreparedStatement.class);
         ResultSet mockedResultSet = mock(ResultSet.class);
 
+        // Configure mock objects to return expected results
         when(mockedDatabase.getConnection()).thenReturn(mockedConnection);
         when(mockedConnection.prepareStatement(anyString())).thenReturn(mockedStatement);
         when(mockedStatement.executeQuery()).thenReturn(mockedResultSet);
         when(mockedResultSet.next()).thenReturn(true); // Simulate that a battle is found
 
+        // Create an instance of the BattleRepository_db class to be tested
         BattleRepository_db battleRepository = new BattleRepository_db(mockedDatabase);
         String battleId = "battle123";
 
+        // Call the findBattleById method and assert that it returns a non-empty Optional<BattleResult>
         Optional<BattleResult> battleResult = battleRepository.findBattleById(battleId);
 
-        assertTrue(battleResult.isPresent());
+        assertTrue(battleResult.isPresent()); // Assertion: Ensure a battle is found
     }
+
 
     @Test
     void startBattleShouldHandleConcurrentAccess() throws SQLException, InterruptedException {
+        // Create mock objects to simulate database interactions
         Database mockedDatabase = mock(Database.class);
         Connection mockedConnection = mock(Connection.class);
         PreparedStatement mockedStatement = mock(PreparedStatement.class);
 
+        // Configure mock objects to return success when executeUpdate is called
         when(mockedDatabase.getConnection()).thenReturn(mockedConnection);
         when(mockedConnection.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(mockedStatement);
         when(mockedStatement.executeUpdate()).thenReturn(1);
 
+        // Create an instance of the BattleRepository_db class to be tested
         BattleRepository_db battleRepository = new BattleRepository_db(mockedDatabase);
 
-        // Simulate concurrent access
+        // Simulate concurrent access by creating two threads
         Runnable task1 = () -> battleRepository.startBattle("battle1", "host1", "opponent1");
         Runnable task2 = () -> battleRepository.startBattle("battle2", "host2", "opponent2");
 
@@ -58,11 +66,9 @@ public class BattleRepositoryTest {
         thread1.join();
         thread2.join();
 
-        // Each call to startBattle sets three parameters on the PreparedStatement
-        verify(mockedStatement, times(6)).setString(anyInt(), anyString());
-        verify(mockedStatement, times(2)).executeUpdate(); // Verify method was called twice
+        // Verify that the startBattle method sets the necessary parameters and is called twice
+        verify(mockedStatement, times(6)).setString(anyInt(), anyString()); // Parameters are set 6 times (3 per call)
+        verify(mockedStatement, times(2)).executeUpdate(); // Method is called twice (once per call)
     }
-
-
 
 }

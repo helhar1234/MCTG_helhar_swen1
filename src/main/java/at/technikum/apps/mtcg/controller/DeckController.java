@@ -51,48 +51,77 @@ public class DeckController extends Controller {
         this.cardService = cardService;
     }
 
+    /**
+     * Creates or updates a user's deck based on the provided card IDs.
+     *
+     * @param request The HTTP request containing the deck configuration information.
+     * @return A Response object indicating the success or failure of the deck configuration.
+     */
     private Response createUserDeck(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Declare an array to hold the card IDs from the request
         String[] cardIds;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
+
+            // Read the card IDs from the request body and convert them into a String array
             cardIds = objectMapper.readValue(request.getBody(), String[].class);
         } catch (JsonProcessingException e) {
+            // In case of JSON processing errors, return a bad request response with error details
             return ResponseHelper.badRequestResponse("Error parsing deck data: " + e.getMessage());
         }
 
+        // Configure the user's deck with the provided card IDs
         boolean isDeckConf = deckService.configureDeck(requester, cardIds);
+
+        // Return a response indicating the deck has been successfully configured
         return ResponseHelper.okResponse("The deck has been successfully configured");
-
-
     }
 
 
+    /**
+     * Retrieves the user's deck and returns it in either plain text or JSON format.
+     *
+     * @param request     The HTTP request containing the user's information.
+     * @param queryParams The query parameters from the HTTP request to determine the response format.
+     * @return A Response object containing the user's deck in the specified format or an error message.
+     */
     private Response getUserDeck(Request request, String queryParams) {
+        // Check if the request specifies plain text format
         boolean isPlainFormat = queryParams.equals("format=plain");
 
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Retrieve the array of cards representing the user's deck
         Card[] cards = deckService.getDeck(requester);
+
+        // Create an ObjectMapper instance for potential JSON processing
         ObjectMapper objectMapper = new ObjectMapper();
+
+        // Variables to store the response body and content type
         String responseBody;
         HttpContentType contentType;
 
         if (isPlainFormat) {
-            // Convert deck to plain text and set response body and content type
+            // Convert the deck to plain text format and set the response body and content type
             responseBody = convertDeckToPlainText(cards);
             contentType = HttpContentType.TEXT_PLAIN;
         } else {
-            // Convert deck to JSON and catch any potential JsonProcessingException
+            // Convert the deck to JSON format and set the response body and content type
             try {
                 responseBody = objectMapper.writeValueAsString(cards);
                 contentType = HttpContentType.APPLICATION_JSON;
             } catch (JsonProcessingException e) {
-                // If JSON parsing fails, return the error response immediately
+                // If JSON processing fails, return an error response immediately
                 return ResponseHelper.badRequestResponse("Error parsing deck data: " + e.getMessage());
             }
         }
 
-        // Return the response, contentType is set based on the isPlainFormat flag
+        // Return the response, with the content type set based on the isPlainFormat flag
         return ResponseHelper.okResponse(responseBody, contentType);
     }
 

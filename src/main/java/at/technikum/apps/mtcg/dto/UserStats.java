@@ -7,13 +7,11 @@ public class UserStats {
     public UserStats() {
     }
 
-    // Constructor
     public UserStats(String username, int eloRating) {
         this.username = username;
         this.eloRating = eloRating;
     }
 
-    // Getters and Setters
     public String getUsername() {
         return username;
     }

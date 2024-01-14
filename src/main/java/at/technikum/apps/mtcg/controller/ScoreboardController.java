@@ -40,18 +40,35 @@ public class ScoreboardController extends Controller {
         this.userService = userService;
     }
 
+    /**
+     * Retrieves the scoreboard and returns it in a JSON formatted response.
+     *
+     * @param request The HTTP request containing the user's information.
+     * @return A Response object containing the scoreboard in JSON format or an error message.
+     */
     private Response getScoreboard(Request request) {
+        // Authenticate the user making the request
         User requester = sessionService.authenticateRequest(request);
+
+        // Retrieve the array of UserStats representing the scoreboard
         UserStats[] scoreboard = scoreboardService.getScoreboard(requester);
+
+        // Prepare to convert the scoreboard to a JSON string
         String scoreboardJson;
         try {
+            // Create an ObjectMapper instance for JSON processing
             ObjectMapper objectMapper = new ObjectMapper();
-            scoreboardJson = objectMapper.writeValueAsString(scoreboard);
 
+            // Convert the scoreboard to a JSON string
+            scoreboardJson = objectMapper.writeValueAsString(scoreboard);
         } catch (JsonProcessingException e) {
+            // In case of JSON processing errors, return a bad request response with error details
             return ResponseHelper.badRequestResponse("Error parsing scoreboard data: " + e.getMessage());
         }
+
+        // Create and return a successful response with the scoreboard in JSON format
         return ResponseHelper.okResponse(scoreboardJson, HttpContentType.APPLICATION_JSON);
     }
+
 
 }

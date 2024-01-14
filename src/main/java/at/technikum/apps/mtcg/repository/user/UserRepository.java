@@ -22,5 +22,4 @@ public interface UserRepository {
     Optional<User> findUserById(String id);
 
 
-
 }

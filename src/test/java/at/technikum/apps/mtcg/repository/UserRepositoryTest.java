@@ -1,22 +1,17 @@
 package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.database.Database;
-import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.entity.UserData;
 import at.technikum.apps.mtcg.repository.user.UserRepository_db;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.*;
 import java.util.Optional;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
+
 public class UserRepositoryTest {
     @Test
     void shouldReturnTrueWhenUsernameExists() throws SQLException {
@@ -46,7 +41,6 @@ public class UserRepositoryTest {
         verify(mockedStatement).setString(1, "testUserRepository"); // Verify that the statement was set with the correct username
         verify(mockedResultSet).getInt("count"); // Verify that the count was retrieved from the result set
     }
-
 
 
     @Test
@@ -82,5 +76,6 @@ public class UserRepositoryTest {
         verify(mockedConnection, times(1)).setAutoCommit(false); // Verify that the transaction was started
         verify(mockedConnection, times(1)).commit(); // Verify that the transaction was committed
     }
+
 
 }
