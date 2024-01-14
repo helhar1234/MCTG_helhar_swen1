@@ -15,7 +15,10 @@ MCTG is a fun and engaging card game that allows players to:
 
 To get started with the game, follow these steps:
 
-1. Clone this repository to your local machine:
+1. Open a new Maven Project in IntelliJ IDEA (my Version: 2023.2.4)
+
+2. Clone this repository into your project:
 
    ```bash
-   git clone https://github.com/helhar1234/MCTG_helhar_swen1.git
+   https://github.com/helhar1234/MCTG_helhar_swen1.git
+
