@@ -4,7 +4,6 @@ import at.technikum.apps.mtcg.customExceptions.HttpStatusException;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.Package;
 import at.technikum.apps.mtcg.entity.User;
-import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.coins.CoinRepository;
 import at.technikum.apps.mtcg.repository.packages.PackageRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
@@ -13,17 +12,13 @@ import at.technikum.server.http.HttpStatus;
 import java.util.Optional;
 
 public class TransactionsService {
-    private final CardRepository cardRepository;
     private final UserRepository userRepository;
     private final PackageRepository packageRepository;
-    private final SessionService sessionService;
     private final CoinRepository coinRepository;
 
-    public TransactionsService(CardRepository cardRepository, UserRepository userRepository, PackageRepository packageRepository, SessionService sessionService, CoinRepository coinRepository) {
-        this.cardRepository = cardRepository;
+    public TransactionsService(UserRepository userRepository, PackageRepository packageRepository, CoinRepository coinRepository) {
         this.userRepository = userRepository;
         this.packageRepository = packageRepository;
-        this.sessionService = sessionService;
         this.coinRepository = coinRepository;
     }
 

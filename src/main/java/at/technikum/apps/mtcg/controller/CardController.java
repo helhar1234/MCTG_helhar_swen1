@@ -5,7 +5,6 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -13,8 +12,6 @@ import at.technikum.server.http.Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
-// TODO: MAKE DECK CONTROLLER SEPERATE
 public class CardController extends Controller {
     @Override
     public boolean supports(String route) {
@@ -37,12 +34,10 @@ public class CardController extends Controller {
 
     private final CardService cardService;
     private final SessionService sessionService;
-    private final UserService userService;
 
-    public CardController(CardService cardService, SessionService sessionService, UserService userService) {
+    public CardController(CardService cardService, SessionService sessionService) {
         this.cardService = cardService;
         this.sessionService = sessionService;
-        this.userService = userService;
     }
 
     /**

@@ -4,7 +4,6 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.SessionService;
 import at.technikum.apps.mtcg.service.StatsService;
-import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -31,14 +30,12 @@ public class StatsController extends Controller {
         return status(HttpStatus.BAD_REQUEST);
     }
 
-    private final UserService userService;
     private final SessionService sessionService;
     private final StatsService statsService;
 
-    public StatsController(StatsService statsService, SessionService sessionService, UserService userService) {
+    public StatsController(StatsService statsService, SessionService sessionService) {
         this.statsService = statsService;
         this.sessionService = sessionService;
-        this.userService = userService;
     }
 
     /**

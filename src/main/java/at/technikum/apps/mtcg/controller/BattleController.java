@@ -4,9 +4,7 @@ import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.BattleService;
-import at.technikum.apps.mtcg.service.DeckService;
 import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -33,15 +31,11 @@ public class BattleController extends Controller {
     }
 
     private final SessionService sessionService;
-    private final UserService userService;
     private final BattleService battleService;
-    private final DeckService deckService;
 
-    public BattleController(BattleService battleService, SessionService sessionService, UserService userService, DeckService deckService) {
+    public BattleController(BattleService battleService, SessionService sessionService) {
         this.sessionService = sessionService;
-        this.userService = userService;
         this.battleService = battleService;
-        this.deckService = deckService;
     }
 
     /**

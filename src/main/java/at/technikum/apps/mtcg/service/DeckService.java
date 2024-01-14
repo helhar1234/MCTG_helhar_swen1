@@ -8,11 +8,9 @@ import at.technikum.server.http.HttpStatus;
 
 public class DeckService {
     private final CardRepository cardRepository;
-    private final SessionService sessionService;
 
-    public DeckService(CardRepository cardRepository, SessionService sessionService) {
+    public DeckService(CardRepository cardRepository) {
         this.cardRepository = cardRepository;
-        this.sessionService = sessionService;
     }
 
     /**

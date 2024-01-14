@@ -19,14 +19,13 @@ public class CardServiceTest {
     void findCardByIdShouldRetrieveFireElfCard() {
         // Mock dependencies and create an instance of CardService
         CardRepository mockedCardRepository = mock(CardRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
 
         // Define an optional FireElf card and configure the mock behavior for finding the card by ID
         Optional<Card> fireElf = Optional.of(new Card("elfCard", "FireElf", 100, "fire", "monster"));
         when(mockedCardRepository.findCardById("elfCard")).thenReturn(fireElf);
 
         // Create an instance of CardService and retrieve the card by ID
-        CardService cardService = new CardService(mockedCardRepository, mockedSessionService);
+        CardService cardService = new CardService(mockedCardRepository);
         Optional<Card> foundCard = cardService.findCardById("elfCard");
 
         // Assertions to check if the FireElf card was retrieved correctly
@@ -41,7 +40,6 @@ public class CardServiceTest {
     void getUserCardsShouldReturnThemedDeck() {
         // Mock dependencies and create an instance of CardService
         CardRepository mockedCardRepository = mock(CardRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         // Define a themed deck and configure the mock behavior for retrieving user cards
         String userId = "user123";
         Card[] themedDeck = new Card[]{
@@ -53,7 +51,7 @@ public class CardServiceTest {
         when(mockedCardRepository.getUserCards(userId)).thenReturn(themedDeck);
 
         // Create an instance of CardService and retrieve the user's cards
-        CardService cardService = new CardService(mockedCardRepository, mockedSessionService);
+        CardService cardService = new CardService(mockedCardRepository);
         Card[] retrievedCards = cardService.getUserCards(userId);
 
         // Assertions to check if the themed deck was retrieved correctly
@@ -71,7 +69,6 @@ public class CardServiceTest {
     void isCardInStackShouldIdentifyCard() {
         // Mock dependencies and create an instance of CardService
         CardRepository mockedCardRepository = mock(CardRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
 
         // Define a user ID and rare card ID, and configure the mock behavior for checking card existence
         String userId = "userCardServiceTest";
@@ -79,7 +76,7 @@ public class CardServiceTest {
         when(mockedCardRepository.isCardInStack(userId, rareCardId)).thenReturn(true);
 
         // Create an instance of CardService and check if the card is in the user's stack
-        CardService cardService = new CardService(mockedCardRepository, mockedSessionService);
+        CardService cardService = new CardService(mockedCardRepository);
         boolean isCardInStack = cardService.isCardInStack(userId, rareCardId);
 
         // Assertion to verify that the card is identified in the user's stack
@@ -90,14 +87,13 @@ public class CardServiceTest {
     void getCardsShouldThrowExceptionWhenUserHasNoCards() {
         // Mock dependencies and create an instance of CardService
         CardRepository mockedCardRepository = mock(CardRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
 
         // Define a user ID and configure the mock behavior for retrieving user cards (empty array)
         String userId = "user123";
         when(mockedCardRepository.getUserCards(userId)).thenReturn(new Card[0]);
 
         // Create an instance of CardService and attempt to retrieve cards for the user
-        CardService cardService = new CardService(mockedCardRepository, mockedSessionService);
+        CardService cardService = new CardService(mockedCardRepository);
         User user = new User();
         user.setId(userId);
 

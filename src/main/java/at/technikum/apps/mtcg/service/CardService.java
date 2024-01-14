@@ -10,11 +10,9 @@ import java.util.Optional;
 
 public class CardService {
     private final CardRepository cardRepository;
-    private final SessionService sessionService;
 
-    public CardService(CardRepository cardRepository, SessionService sessionService) {
+    public CardService(CardRepository cardRepository) {
         this.cardRepository = cardRepository;
-        this.sessionService = sessionService;
     }
 
     /**

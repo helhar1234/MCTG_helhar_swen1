@@ -5,7 +5,6 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
 import at.technikum.apps.mtcg.service.ScoreboardService;
 import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -30,14 +29,12 @@ public class ScoreboardController extends Controller {
         return status(HttpStatus.BAD_REQUEST);
     }
 
-    private final UserService userService;
     private final SessionService sessionService;
     private final ScoreboardService scoreboardService;
 
-    public ScoreboardController(ScoreboardService scoreboardService, SessionService sessionService, UserService userService) {
+    public ScoreboardController(ScoreboardService scoreboardService, SessionService sessionService) {
         this.scoreboardService = scoreboardService;
         this.sessionService = sessionService;
-        this.userService = userService;
     }
 
     /**

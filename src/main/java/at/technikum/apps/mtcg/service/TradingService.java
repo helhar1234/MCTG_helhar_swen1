@@ -8,7 +8,6 @@ import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.trading.TradingRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.server.http.HttpStatus;
-import at.technikum.server.http.Request;
 
 import java.util.Optional;
 
@@ -16,13 +15,11 @@ public class TradingService {
     private final TradingRepository tradingRepository;
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
-    private final SessionService sessionService;
 
-    public TradingService(TradingRepository tradingRepository, CardRepository cardRepository, UserRepository userRepository, SessionService sessionService) {
+    public TradingService(TradingRepository tradingRepository, CardRepository cardRepository, UserRepository userRepository) {
         this.tradingRepository = tradingRepository;
         this.cardRepository = cardRepository;
         this.userRepository = userRepository;
-        this.sessionService = sessionService;
     }
 
     /**
@@ -154,15 +151,13 @@ public class TradingService {
     /**
      * Executes a trading deal.
      *
-     * @param request       The HTTP request containing the user's information.
+     * @param requester     The User requesting the trade.
      * @param tradingId     The ID of the trading deal to be executed.
      * @param offeredCardId The ID of the card being offered in the trade.
      * @return True if the trade is successfully executed, false otherwise.
      * @throws HttpStatusException If the trading deal is not found, or the user cannot trade with themselves, or if the offered card is not valid.
      */
-    public boolean trade(Request request, String tradingId, String offeredCardId) {
-        // Authenticate the user making the request
-        User requester = sessionService.authenticateRequest(request);
+    public boolean trade(User requester, String tradingId, String offeredCardId) {
 
         // Retrieve the trade request
         Optional<TradeRequest> trade = getTradeById(tradingId);

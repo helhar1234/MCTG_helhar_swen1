@@ -6,7 +6,6 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.elo.ELORepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +14,6 @@ import java.util.List;
 
 public class BattleLogic {
     private final BattleRepository battleRepository;
-    private final UserRepository userRepository;
     private final CardRepository cardRepository;
     private final ELORepository eloRepository;
 
@@ -23,9 +21,8 @@ public class BattleLogic {
     private static final int ELO_WIN = 3;
     private static final int ELO_LOSS = -5;
 
-    public BattleLogic(BattleRepository battleRepository, UserRepository userRepository, CardRepository cardRepository, ELORepository eloRepository) {
+    public BattleLogic(BattleRepository battleRepository, CardRepository cardRepository, ELORepository eloRepository) {
         this.battleRepository = battleRepository;
-        this.userRepository = userRepository;
         this.cardRepository = cardRepository;
         this.eloRepository = eloRepository;
     }

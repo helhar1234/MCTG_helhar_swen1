@@ -24,9 +24,8 @@ class TransactionsServiceTest {
         CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         CoinRepository mockedCoinRepository = mock(CoinRepository.class);
-        TransactionsService transactionsService = new TransactionsService(mockedCardRepository, mockedUserRepository, mockedPackageRepository, mockedSessionService, mockedCoinRepository);
+        TransactionsService transactionsService = new TransactionsService(mockedUserRepository, mockedPackageRepository, mockedCoinRepository);
 
         // Create a user with sufficient coins and a package to purchase
         User user = new User("userId", "username", "password", 5, 100, false);
@@ -35,7 +34,6 @@ class TransactionsServiceTest {
         Card[] cards = new Card[5]; // Create an array of 5 cards for the package
         for (int i = 0; i < cards.length; i++) {
             cards[i] = new Card("cardId" + i, "cardName" + i, 10, "element", "type");
-            when(mockedCardRepository.findCardById("cardId" + i)).thenReturn(Optional.empty());
             when(mockedUserRepository.addCardToStack(user.getId(), cards[i])).thenReturn(true);
         }
 
@@ -59,12 +57,10 @@ class TransactionsServiceTest {
     @Test
     void makeTransactionShouldFailWithInsufficientCoins() {
         // Mock setup
-        CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         CoinRepository mockedCoinRepository = mock(CoinRepository.class);
-        TransactionsService transactionsService = new TransactionsService(mockedCardRepository, mockedUserRepository, mockedPackageRepository, mockedSessionService, mockedCoinRepository);
+        TransactionsService transactionsService = new TransactionsService(mockedUserRepository, mockedPackageRepository, mockedCoinRepository);
 
         // Create a user with insufficient coins and a package with a higher price
         User user = new User("userId", "username", "password", 30, 100, false); // Assume 30 coins
@@ -86,12 +82,10 @@ class TransactionsServiceTest {
     @Test
     void executeTransactionShouldFailAndRefundWhenCardAdditionFails() {
         // Mock setup
-        CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         CoinRepository mockedCoinRepository = mock(CoinRepository.class);
-        TransactionsService transactionsService = new TransactionsService(mockedCardRepository, mockedUserRepository, mockedPackageRepository, mockedSessionService, mockedCoinRepository);
+        TransactionsService transactionsService = new TransactionsService(mockedUserRepository, mockedPackageRepository, mockedCoinRepository);
 
         String packageId = "packageId";
         String userId = "userId";

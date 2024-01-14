@@ -7,11 +7,9 @@ import at.technikum.apps.mtcg.repository.scoreboard.ScoreboardRepository;
 public class ScoreboardService {
 
     private final ScoreboardRepository scoreboardRepository;
-    private final SessionService sessionService;
 
-    public ScoreboardService(ScoreboardRepository scoreboardRepository, SessionService sessionService) {
+    public ScoreboardService(ScoreboardRepository scoreboardRepository) {
         this.scoreboardRepository = scoreboardRepository;
-        this.sessionService = sessionService;
     }
 
     /**

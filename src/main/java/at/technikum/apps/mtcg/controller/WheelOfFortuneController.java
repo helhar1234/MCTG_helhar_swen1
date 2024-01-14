@@ -1,8 +1,5 @@
 package at.technikum.apps.mtcg.controller;
 
-// TODO: implement Wheel of fortune for users -> get either a new card or coins once a day
-// PRIZES: good cards or coins (12/16)
-// LOOSERS: -5 coins (4/16)
 
 import at.technikum.apps.mtcg.dto.WheelPrize;
 import at.technikum.apps.mtcg.entity.User;

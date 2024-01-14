@@ -18,12 +18,10 @@ public class PackageService {
 
     private final CardRepository cardRepository;
     private final PackageRepository packageRepository;
-    private final SessionService sessionService;
 
-    public PackageService(CardRepository cardRepository, PackageRepository packageRepository, SessionService sessionService) {
+    public PackageService(CardRepository cardRepository, PackageRepository packageRepository) {
         this.cardRepository = cardRepository;
         this.packageRepository = packageRepository;
-        this.sessionService = sessionService;
     }
 
     /**

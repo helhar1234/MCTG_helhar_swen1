@@ -21,11 +21,10 @@ class BattleServiceTest {
         // Mock dependencies and create an instance of BattleService
         BattleRepository mockedBattleRepository = mock(BattleRepository.class);
         BattleLogic mockedBattleLogic = mock(BattleLogic.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         DeckService mockedDeckService = mock(DeckService.class);
         ConcurrentHashMap<String, BattleResult> battlesWaiting = new ConcurrentHashMap<>();
 
-        BattleService battleService = new BattleService(mockedBattleRepository, mockedBattleLogic, battlesWaiting, mockedSessionService, mockedDeckService);
+        BattleService battleService = new BattleService(mockedBattleRepository, mockedBattleLogic, battlesWaiting, mockedDeckService);
 
         // Create a user instance
         User player = new User("userId", "username", "password");
@@ -49,11 +48,10 @@ class BattleServiceTest {
         // Mock dependencies and create an instance of BattleService
         BattleRepository mockedBattleRepository = mock(BattleRepository.class);
         BattleLogic mockedBattleLogic = mock(BattleLogic.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         DeckService mockedDeckService = mock(DeckService.class);
         ConcurrentHashMap<String, BattleResult> battlesWaiting = new ConcurrentHashMap<>();
 
-        BattleService battleService = new BattleService(mockedBattleRepository, mockedBattleLogic, battlesWaiting, mockedSessionService, mockedDeckService);
+        BattleService battleService = new BattleService(mockedBattleRepository, mockedBattleLogic, battlesWaiting, mockedDeckService);
 
         // Create a user instance
         User player = new User("userId", "username", "password");
@@ -78,11 +76,10 @@ class BattleServiceTest {
         // Mock dependencies and create an instance of BattleService
         BattleRepository mockedBattleRepository = mock(BattleRepository.class);
         BattleLogic mockedBattleLogic = mock(BattleLogic.class);
-        SessionService mockedSessionService = mock(SessionService.class);
         DeckService mockedDeckService = mock(DeckService.class);
         ConcurrentHashMap<String, BattleResult> battlesWaiting = new ConcurrentHashMap<>();
 
-        BattleService battleService = new BattleService(mockedBattleRepository, mockedBattleLogic, battlesWaiting, mockedSessionService, mockedDeckService);
+        BattleService battleService = new BattleService(mockedBattleRepository, mockedBattleLogic, battlesWaiting, mockedDeckService);
 
         // Create user instances for players A and B
         User playerA = new User("playerAId", "playerA", "password");

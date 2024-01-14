@@ -6,7 +6,6 @@ import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository;
 import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.elo.ELORepository;
-import at.technikum.apps.mtcg.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -18,12 +17,11 @@ public class BattleLogicTest {
     void testDrawCondition() {
         // Mock dependencies
         BattleRepository mockedBattleRepository = mock(BattleRepository.class);
-        UserRepository mockedUserRepository = mock(UserRepository.class);
         CardRepository mockedCardRepository = mock(CardRepository.class);
         ELORepository mockedELORepository = mock(ELORepository.class);
 
         // Create an instance of BattleLogic with mocked dependencies
-        BattleLogic battleLogic = new BattleLogic(mockedBattleRepository, mockedUserRepository, mockedCardRepository, mockedELORepository);
+        BattleLogic battleLogic = new BattleLogic(mockedBattleRepository, mockedCardRepository, mockedELORepository);
 
         // Create two user instances representing players in the battle
         User playerA = new User("playerAId", "playerA", "password", 100, 100, false);

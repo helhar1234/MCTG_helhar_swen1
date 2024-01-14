@@ -8,11 +8,9 @@ import java.util.Map;
 
 public class StatsService {
     private final StatsRepository statsRepository;
-    private final SessionService sessionService;
 
-    public StatsService(StatsRepository statsRepository, SessionService sessionService) {
+    public StatsService(StatsRepository statsRepository) {
         this.statsRepository = statsRepository;
-        this.sessionService = sessionService;
     }
 
     /**

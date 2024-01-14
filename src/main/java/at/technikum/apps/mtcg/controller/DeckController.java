@@ -4,10 +4,8 @@ package at.technikum.apps.mtcg.controller;
 import at.technikum.apps.mtcg.entity.Card;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
-import at.technikum.apps.mtcg.service.CardService;
 import at.technikum.apps.mtcg.service.DeckService;
 import at.technikum.apps.mtcg.service.SessionService;
-import at.technikum.apps.mtcg.service.UserService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -38,17 +36,13 @@ public class DeckController extends Controller {
         return status(HttpStatus.BAD_REQUEST);
     }
 
-    private final UserService userService;
     private final SessionService sessionService;
-    private final CardService cardService;
     private final DeckService deckService;
 
 
-    public DeckController(DeckService deckService, SessionService sessionService, UserService userService, CardService cardService) {
+    public DeckController(DeckService deckService, SessionService sessionService) {
         this.deckService = deckService;
         this.sessionService = sessionService;
-        this.userService = userService;
-        this.cardService = cardService;
     }
 
     /**

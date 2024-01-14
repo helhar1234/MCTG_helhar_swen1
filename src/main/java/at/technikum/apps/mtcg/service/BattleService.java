@@ -14,14 +14,12 @@ public class BattleService {
     private final BattleRepository battleRepository;
     private final BattleLogic battleLogic;
     private final ConcurrentHashMap<String, BattleResult> battlesWaiting; // kümmert sich um mutexes selbst
-    private final SessionService sessionService;
     private final DeckService deckService;
 
-    public BattleService(BattleRepository battleRepository, BattleLogic battleLogic, ConcurrentHashMap<String, BattleResult> battlesWaiting, SessionService sessionService, DeckService deckService) {
+    public BattleService(BattleRepository battleRepository, BattleLogic battleLogic, ConcurrentHashMap<String, BattleResult> battlesWaiting, DeckService deckService) {
         this.battleRepository = battleRepository;
         this.battleLogic = battleLogic;
         this.battlesWaiting = battlesWaiting;
-        this.sessionService = sessionService;
         this.deckService = deckService;
     }
 

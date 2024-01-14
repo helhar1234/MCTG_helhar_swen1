@@ -8,7 +8,6 @@ import at.technikum.apps.mtcg.repository.card.CardRepository;
 import at.technikum.apps.mtcg.repository.trading.TradingRepository;
 import at.technikum.apps.mtcg.repository.user.UserRepository;
 import at.technikum.server.http.HttpStatus;
-import at.technikum.server.http.Request;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -25,8 +24,7 @@ class TradingServiceTest {
         TradingRepository mockedTradingRepository = mock(TradingRepository.class);
         CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository, mockedSessionService);
+        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository);
 
         // Create a user and a trade request
         User user = new User("userId", "username", "password");
@@ -49,8 +47,7 @@ class TradingServiceTest {
         TradingRepository mockedTradingRepository = mock(TradingRepository.class);
         CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository, mockedSessionService);
+        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository);
 
         // Create a user
         User user = new User("userId", "username", "password");
@@ -73,8 +70,7 @@ class TradingServiceTest {
         TradingRepository mockedTradingRepository = mock(TradingRepository.class);
         CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository, mockedSessionService);
+        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository);
 
         // Create a user and a trading ID
         User user = new User("userId", "username", "password");
@@ -98,18 +94,15 @@ class TradingServiceTest {
         TradingRepository mockedTradingRepository = mock(TradingRepository.class);
         CardRepository mockedCardRepository = mock(CardRepository.class);
         UserRepository mockedUserRepository = mock(UserRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository, mockedSessionService);
+        TradingService tradingService = new TradingService(mockedTradingRepository, mockedCardRepository, mockedUserRepository);
 
-        // Create a mock request, requester, trading ID, offered card ID, and a trade request
-        Request request = mock(Request.class);
+        // Create a mock requester, trading ID, offered card ID, and a trade request
         User requester = new User("requesterId", "requesterUsername", "password");
         String tradingId = "tradeId";
         String offeredCardId = "offeredCardId";
         TradeRequest trade = new TradeRequest(tradingId, "cardId", "type", 10);
 
         // Configure mock behaviors for request authentication, trade retrieval, card checks, and card retrieval
-        when(mockedSessionService.authenticateRequest(request)).thenReturn(requester);
         when(mockedTradingRepository.getTradeById(tradingId)).thenReturn(Optional.of(trade));
         when(mockedCardRepository.isCardInStack(requester.getId(), offeredCardId)).thenReturn(true);
         when(mockedCardRepository.isCardInDeck(requester.getId(), offeredCardId)).thenReturn(false);
@@ -118,7 +111,7 @@ class TradingServiceTest {
         // Assert that an HttpStatusException is thrown with specific details
         HttpStatusException exception = assertThrows(
                 HttpStatusException.class,
-                () -> tradingService.trade(request, tradingId, offeredCardId)
+                () -> tradingService.trade(requester, tradingId, offeredCardId)
         );
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatus());
         assertEquals("The offered card does not meet the trade requirements or is locked in the deck.", exception.getMessage());

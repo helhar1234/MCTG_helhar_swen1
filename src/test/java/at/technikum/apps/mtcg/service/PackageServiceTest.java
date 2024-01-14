@@ -21,8 +21,7 @@ class PackageServiceTest {
         // Mock dependencies and create an instance of PackageService
         CardRepository mockedCardRepository = mock(CardRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository, mockedSessionService);
+        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository);
 
         // Create an admin user and package cards
         User adminUser = new User("adminUserId", "adminUser", "password", 5, 100, true);
@@ -46,8 +45,7 @@ class PackageServiceTest {
         // Mock dependencies and create an instance of PackageService
         CardRepository mockedCardRepository = mock(CardRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository, mockedSessionService);
+        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository);
 
         // Create a non-admin user and package cards
         User nonAdminUser = new User("userId", "username", "password", 5, 100, false);
@@ -66,8 +64,7 @@ class PackageServiceTest {
         // Mock dependencies and create an instance of PackageService
         CardRepository mockedCardRepository = mock(CardRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository, mockedSessionService);
+        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository);
 
         // Define a package ID and the expected package
         String packageId = "packageId";
@@ -86,8 +83,7 @@ class PackageServiceTest {
         // Mock dependencies and create an instance of PackageService
         CardRepository mockedCardRepository = mock(CardRepository.class);
         PackageRepository mockedPackageRepository = mock(PackageRepository.class);
-        SessionService mockedSessionService = mock(SessionService.class);
-        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository, mockedSessionService);
+        PackageService packageService = new PackageService(mockedCardRepository, mockedPackageRepository);
 
         // Define a user ID and the expected package ID
         String userId = "userId";

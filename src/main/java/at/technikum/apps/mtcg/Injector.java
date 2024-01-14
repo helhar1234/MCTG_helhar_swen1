@@ -55,32 +55,32 @@ public class Injector {
         HashingService hashingService = new HashingService();
         SessionService sessionService = new SessionService(userRepository, sessionRepository, hashingService);
         UserService userService = new UserService(userRepository, hashingService);
-        CardService cardService = new CardService(cardRepository, sessionService);
-        DeckService deckService = new DeckService(cardRepository, sessionService);
-        PackageService packageService = new PackageService(cardRepository, packageRepository, sessionService);
-        ScoreboardService scoreboardService = new ScoreboardService(scoreboardRepository, sessionService);
-        StatsService statsService = new StatsService(statsRepository, sessionService);
-        TradingService tradingService = new TradingService(tradingRepository, cardRepository, userRepository, sessionService);
-        TransactionsService transactionsService = new TransactionsService(cardRepository, userRepository, packageRepository, sessionService, coinRepository);
+        CardService cardService = new CardService(cardRepository);
+        DeckService deckService = new DeckService(cardRepository);
+        PackageService packageService = new PackageService(cardRepository, packageRepository);
+        ScoreboardService scoreboardService = new ScoreboardService(scoreboardRepository);
+        StatsService statsService = new StatsService(statsRepository);
+        TradingService tradingService = new TradingService(tradingRepository, cardRepository, userRepository);
+        TransactionsService transactionsService = new TransactionsService(userRepository, packageRepository, coinRepository);
         WheelOfFortuneService wheelOfFortuneService = new WheelOfFortuneService(wheelOfFortuneRepository, userRepository, cardRepository, coinRepository, random);
 
         // Battle-Logik und Battle-Warteschlange initialisieren
-        BattleLogic battleLogic = new BattleLogic(battleRepository, userRepository, cardRepository, eloRepository);
+        BattleLogic battleLogic = new BattleLogic(battleRepository, cardRepository, eloRepository);
         ConcurrentHashMap<String, BattleResult> battlesWaiting = new ConcurrentHashMap<>();
-        BattleService battleService = new BattleService(battleRepository, battleLogic, battlesWaiting, sessionService, deckService);
+        BattleService battleService = new BattleService(battleRepository, battleLogic, battlesWaiting, deckService);
 
         // Controller mit Services initialisieren
         List<Controller> controllerList = new ArrayList<>();
         controllerList.add(new SessionController(sessionService));
         controllerList.add(new UserController(userService, sessionService));
-        controllerList.add(new CardController(cardService, sessionService, userService));
-        controllerList.add(new DeckController(deckService, sessionService, userService, cardService));
-        controllerList.add(new PackageController(packageService, sessionService, userService, cardService));
-        controllerList.add(new ScoreboardController(scoreboardService, sessionService, userService));
-        controllerList.add(new StatsController(statsService, sessionService, userService));
-        controllerList.add(new TradingController(tradingService, sessionService, cardService, userService, deckService));
+        controllerList.add(new CardController(cardService, sessionService));
+        controllerList.add(new DeckController(deckService, sessionService));
+        controllerList.add(new PackageController(packageService, sessionService));
+        controllerList.add(new ScoreboardController(scoreboardService, sessionService));
+        controllerList.add(new StatsController(statsService, sessionService));
+        controllerList.add(new TradingController(tradingService, sessionService));
         controllerList.add(new TransactionsController(transactionsService, sessionService));
-        controllerList.add(new BattleController(battleService, sessionService, userService, deckService));
+        controllerList.add(new BattleController(battleService, sessionService));
         controllerList.add(new WheelOfFortuneController(wheelOfFortuneService, sessionService));
 
         return controllerList;

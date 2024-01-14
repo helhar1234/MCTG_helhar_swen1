@@ -3,7 +3,8 @@ package at.technikum.apps.mtcg.controller;
 import at.technikum.apps.mtcg.entity.TradeRequest;
 import at.technikum.apps.mtcg.entity.User;
 import at.technikum.apps.mtcg.responses.ResponseHelper;
-import at.technikum.apps.mtcg.service.*;
+import at.technikum.apps.mtcg.service.SessionService;
+import at.technikum.apps.mtcg.service.TradingService;
 import at.technikum.server.http.HttpContentType;
 import at.technikum.server.http.HttpStatus;
 import at.technikum.server.http.Request;
@@ -12,8 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-// TODO: ADD COMMENTS & MAYBE USE ADDITIONAL FUNCTION FOR TOKEN AUTHENTIFICATION
-// TODO: SHORTEN CODE BY USING FUNCTIONS FOR DUPLICATE LOGIC
 
 public class TradingController extends Controller {
     @Override
@@ -45,18 +44,11 @@ public class TradingController extends Controller {
     }
 
     private final TradingService tradingService;
-    private final CardService cardService;
     private final SessionService sessionService;
-    private final UserService userService;
-    private final DeckService deckService;
 
-
-    public TradingController(TradingService tradingService, SessionService sessionService, CardService cardService, UserService userService, DeckService deckService) {
+    public TradingController(TradingService tradingService, SessionService sessionService) {
         this.tradingService = tradingService;
         this.sessionService = sessionService;
-        this.cardService = cardService;
-        this.userService = userService;
-        this.deckService = deckService;
     }
 
     /**
@@ -67,6 +59,10 @@ public class TradingController extends Controller {
      * @return A Response object indicating the success or failure of the trading execution.
      */
     public Response executeTrade(Request request, String tradingId) {
+
+        // Authenticate the user making the request
+        User requester = sessionService.authenticateRequest(request);
+
         String offeredCardId;
         try {
             // Create an ObjectMapper instance for JSON processing
@@ -81,7 +77,7 @@ public class TradingController extends Controller {
         }
 
         // Execute the trade using the provided trading ID and offered card ID
-        boolean isTradeExecuted = tradingService.trade(request, tradingId, offeredCardId);
+        boolean isTradeExecuted = tradingService.trade(requester, tradingId, offeredCardId);
 
         // Return a response indicating the trade was successfully executed
         return ResponseHelper.okResponse("Trading deal successfully executed");
