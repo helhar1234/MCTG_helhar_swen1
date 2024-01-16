@@ -1,12 +1,7 @@
-CREATE
-DATABASE my_mtcg_db;
-\c
-my_mtcg_db;
+CREATEDATABASE my_mtcg_db;
+\c my_mtcg_db;
 
-SET
-timezone='CET';
-SHOW
-TIMEZONE;
+SET timezone='CET';
 
 
 CREATE TABLE users
