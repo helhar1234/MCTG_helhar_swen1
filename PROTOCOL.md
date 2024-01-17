@@ -59,3 +59,4 @@
 - Nach den Ferien habe ich im Durchschnitt täglich 1-3 Stunden am Abend daran gearbeitet, da ich abends am besten programmieren kann.
 
 ## 5) Git-Repo
+https://github.com/helhar1234/MCTG_helhar_swen1
