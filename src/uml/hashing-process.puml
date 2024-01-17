@@ -1,0 +1,51 @@
+@startuml
+title Registrierungsprozess
+
+start
+:User sends registration request;
+
+partition "UserService" {
+  :Generate unique ID for new user;
+
+  partition "HashingService - encrypt" {
+    :Generate salt using BCrypt.gensalt();
+    :Hash plaintext password with salt using BCrypt.hashpw();
+  }
+
+  :Set user as admin if username is 'admin';
+  :Check if username already exists;
+  :Save user in UserRepository;
+}
+
+stop
+@enduml
+
+@startuml
+title Loginprozess
+
+start
+:User sends login request;
+
+partition "SessionService" {
+  :Retrieve user by username from UserRepository;
+  if (User exists?) then (yes)
+
+    partition "HashingService - compareHash" {
+      :Use BCrypt.checkpw() to compare plaintext password with hashed password;
+      if (Passwords match?) then (yes)
+      else (no)
+        stop
+      endif
+    }
+
+    :Delete existing token for user;
+    :Generate new token;
+    :Return token to user;
+  else (no)
+    stop
+  endif
+}
+
+stop
+@enduml
+

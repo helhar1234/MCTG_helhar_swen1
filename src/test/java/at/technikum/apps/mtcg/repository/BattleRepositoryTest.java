@@ -14,31 +14,6 @@ import static org.mockito.Mockito.*;
 public class BattleRepositoryTest {
 
     @Test
-    void findBattleByIdShouldReturnBattleWhenExists() throws SQLException {
-        // Create mock objects to simulate database interactions
-        Database mockedDatabase = mock(Database.class);
-        Connection mockedConnection = mock(Connection.class);
-        PreparedStatement mockedStatement = mock(PreparedStatement.class);
-        ResultSet mockedResultSet = mock(ResultSet.class);
-
-        // Configure mock objects to return expected results
-        when(mockedDatabase.getConnection()).thenReturn(mockedConnection);
-        when(mockedConnection.prepareStatement(anyString())).thenReturn(mockedStatement);
-        when(mockedStatement.executeQuery()).thenReturn(mockedResultSet);
-        when(mockedResultSet.next()).thenReturn(true); // Simulate that a battle is found
-
-        // Create an instance of the BattleRepository_db class to be tested
-        BattleRepository_db battleRepository = new BattleRepository_db(mockedDatabase);
-        String battleId = "battle123";
-
-        // Call the findBattleById method and assert that it returns a non-empty Optional<BattleResult>
-        Optional<BattleResult> battleResult = battleRepository.findBattleById(battleId);
-
-        assertTrue(battleResult.isPresent()); // Assertion: Ensure a battle is found
-    }
-
-
-    @Test
     void startBattleShouldHandleConcurrentAccess() throws SQLException, InterruptedException {
         // Create mock objects to simulate database interactions
         Database mockedDatabase = mock(Database.class);

@@ -10,7 +10,6 @@ import at.technikum.server.http.Request;
 
 import java.util.Optional;
 
-// TODO: ADD COMMENTS
 public class SessionService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;

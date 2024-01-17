@@ -1,0 +1,58 @@
+@startuml
+title Wheel of Fortune Prozess
+
+start
+:User requests to spin the wheel;
+
+partition "WheelOfFortuneService" {
+  :Check if user has spun today using wheelOfFortuneRepository;
+  if (Has user spun today?) then (yes)
+    :Throw HttpStatusException;
+    stop
+  else (no)
+    :Generate a random prize using getRandPrize();
+
+    partition "getRandPrize" {
+      :Generate random number;
+
+      if (Is number 1?) then (yes)
+        :Deduct 2 coins from user;
+        :Set prize to 'COINS' with amount -2;
+      else (no)
+      endif
+
+      if (Is number 2?) then (yes)
+        :Deduct 5 coins from user;
+        :Set prize to 'COINS' with amount -5;
+      else (no)
+      endif
+
+      if (Is number between 3 and 10?) then (yes)
+        :Calculate coins to add (number - 2);
+        :Add calculated coins to user;
+        :Set prize to 'COINS' with calculated amount;
+      else (no)
+      endif
+
+      if (Is number > 10?) then (yes)
+        :Check for available card in cardRepository;
+        if (Card available?) then (yes)
+          :Award card to user;
+          :Set prize to 'CARD' with awarded card;
+        else (no)
+          :Award 5 coins to user;
+          :Set prize to 'COINS' with amount 5;
+        endif
+      else (no)
+      endif
+
+      :Return generated WheelPrize;
+    }
+
+    :Record user's spin in wheelOfFortuneRepository;
+    :Return prize to user;
+  endif
+}
+
+stop
+@enduml
