@@ -76,6 +76,7 @@
     - Wenn ein User sich einloggt, wird sein Passwort gehashed in die DB gespeichert. Anschließend werden bei jedem
       Login die Hash-Werte verglichen
     - Als Hashing-Alghorithmus habe ich bcrypt verwendet, da es so im Internet empfohlen wurde
+ 
       ![Mein Registrierungs-Prozess](img/hashing-process-Registrierungsprozess.png)
       ![Mein Registrierungs-Prozess](img/hashing-process-Loginprozess.png)
 
