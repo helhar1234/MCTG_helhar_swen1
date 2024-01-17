@@ -1,7 +1,10 @@
-CREATEDATABASE my_mtcg_db;
-\c my_mtcg_db;
+CREATEDATABASE
+my_mtcg_db;
+\c
+my_mtcg_db;
 
-SET timezone='CET';
+SET
+timezone='CET';
 
 
 CREATE TABLE users
@@ -118,17 +121,28 @@ CREATE TABLE wheelOfFortune
 );
 
 /*Ausführen bevor curl gestartet wird*/
-DELETE FROM wheelOfFortune;
-DELETE FROM user_cards;
-DELETE FROM cards_packages;
-DELETE FROM trades;
-DELETE FROM battle_logs;
-DELETE FROM battles;
-DELETE FROM users;
-DELETE FROM access_token;
-DELETE FROM userdata;
-DELETE FROM cards;
-DELETE FROM packages;
+DELETE
+FROM wheelOfFortune;
+DELETE
+FROM user_cards;
+DELETE
+FROM cards_packages;
+DELETE
+FROM trades;
+DELETE
+FROM battle_logs;
+DELETE
+FROM battles;
+DELETE
+FROM users;
+DELETE
+FROM access_token;
+DELETE
+FROM userdata;
+DELETE
+FROM cards;
+DELETE
+FROM packages;
 
 
 

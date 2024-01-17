@@ -1,6 +1,8 @@
 # MCTG - Monster Card Trading Game
 
-Welcome to the Monster Card Trading Game (MCTG) repository! This repository contains the source code and assets for a trading card game where players can collect, trade, and battle with monster cards. It was developed as part of the SWEN1 course at FH TECHNIKUM WIEN.
+Welcome to the Monster Card Trading Game (MCTG) repository! This repository contains the source code and assets for a
+trading card game where players can collect, trade, and battle with monster cards. It was developed as part of the SWEN1
+course at FH TECHNIKUM WIEN.
 
 ## About the Game
 

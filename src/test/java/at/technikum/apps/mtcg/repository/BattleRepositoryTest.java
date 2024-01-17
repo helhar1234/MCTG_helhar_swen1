@@ -1,14 +1,14 @@
 package at.technikum.apps.mtcg.repository;
 
 import at.technikum.apps.mtcg.database.Database;
-import at.technikum.apps.mtcg.entity.BattleResult;
 import at.technikum.apps.mtcg.repository.battle.BattleRepository_db;
 import org.junit.jupiter.api.Test;
 
-import java.sql.*;
-import java.util.Optional;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class BattleRepositoryTest {
