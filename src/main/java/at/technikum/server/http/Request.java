@@ -19,7 +19,7 @@ public class Request {
     // 0, 17
     private int contentLength;
 
-    private final Map<String, String> headers = new HashMap<>();
+    private final Map<String, String> headers = new HashMap<>(); // for multiple Headers
 
     // none, "{ "name": "foo" }"
     private String body;

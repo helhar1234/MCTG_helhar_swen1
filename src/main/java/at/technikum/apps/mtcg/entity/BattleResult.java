@@ -9,7 +9,7 @@ public class BattleResult {
     private String start_time;
     private String battleLog;
 
-    BattleResult() {
+    public BattleResult() {
     }
 
     public BattleResult(String id, User playerA, String status) {
